@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+/**
+ * Typo : Source Sans 3 (lisible en long). Cartes : fond blanc / gris, contours neutres (ring slate), pas de cadres colorés.
+ */
+@theme {
+  --font-sans: "Source Sans 3", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(5.75rem + env(safe-area-inset-top));
+    scroll-padding-bottom: 6rem;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
