@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Clock, Home, Mail, PieChart, Search } from "lucide-react";
+import { Home, Mail, Info, Palette, Package } from "lucide-react";
 import { LayoutGroup, motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 import { Link, NavLink, useLocation, type Location } from "react-router-dom";
@@ -112,24 +112,9 @@ export function Navbar() {
 
   return (
     <nav
-      className="pointer-events-none fixed inset-x-0 top-[max(0.65rem,env(safe-area-inset-top))] z-[200] flex items-start justify-between px-3 pt-0.5"
+      className="pointer-events-none fixed inset-x-0 top-[max(0.65rem,env(safe-area-inset-top))] z-[200] flex justify-center px-3 pt-0.5"
       aria-label="Navigation principale"
     >
-      {/* Logo Sorel à gauche */}
-      <Link
-        to="/"
-        className="pointer-events-auto mt-2 ml-2 md:ml-4"
-      >
-        <motion.img
-          src={sorelLogo}
-          alt="Sorel Plastiques"
-          className="h-10 w-auto md:h-12"
-          whileHover={{ scale: 1.05, rotate: 2 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 400, damping: 20 }}
-        />
-      </Link>
-
       <div className="pointer-events-auto flex w-[min(calc(100vw-26px),58rem)] max-w-none flex-col items-center">
         {/* Léger halo sous la pilule — pas une seconde bordure */}
         <div
@@ -159,8 +144,19 @@ export function Navbar() {
 
           <LayoutGroup id="dock">
             <div
-              className="relative z-10 flex h-full items-center justify-between overflow-x-auto px-3 [scrollbar-width:none] sm:justify-center sm:gap-2 sm:px-8 md:px-12 [&::-webkit-scrollbar]:hidden"
+              className="relative z-10 flex h-full items-center justify-between overflow-x-auto px-3 [scrollbar-width:none] sm:justify-center sm:gap-1 sm:px-8 md:px-12 [&::-webkit-scrollbar]:hidden"
             >
+              {/* Logo Sorel dans la navbar */}
+              <Link to="/" className="mr-2 hidden sm:block">
+                <motion.img
+                  src={sorelLogo}
+                  alt="Sorel"
+                  className="h-9 w-auto"
+                  whileHover={{ scale: 1.08, rotate: 2 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                />
+              </Link>
               <NavItemSlot active={isHomeRoot(loc)} chipColor={chipColor}>
                 <Link to="/" className={linkCn(isHomeRoot(loc))}>
                   <NavIcon Icon={Home} muted={muted} />
@@ -173,7 +169,7 @@ export function Navbar() {
                   to="/catalogue"
                   className={({ isActive }) => linkCn(isActive)}
                 >
-                  <NavIcon Icon={Search} muted={muted} />
+                  <NavIcon Icon={Package} muted={muted} />
                   <span className="nav-l whitespace-nowrap">Catalogue</span>
                 </NavLink>
               </NavItemSlot>
@@ -183,15 +179,15 @@ export function Navbar() {
                   to="/a-propos"
                   className={({ isActive }) => linkCn(isActive)}
                 >
-                  <NavIcon Icon={PieChart} muted={muted} />
+                  <NavIcon Icon={Info} muted={muted} />
                   <span className="nav-l whitespace-nowrap">À propos</span>
                 </NavLink>
               </NavItemSlot>
 
               <NavItemSlot active={isGamme(loc)} chipColor={chipColor}>
                 <Link to="/#produits" className={linkCn(isGamme(loc))}>
-                  <NavIcon Icon={Clock} muted={muted} />
-                  <span className="nav-l whitespace-nowrap">Gamme</span>
+                  <NavIcon Icon={Palette} muted={muted} />
+                  <span className="nav-l whitespace-nowrap">Gammes</span>
                 </Link>
               </NavItemSlot>
 
