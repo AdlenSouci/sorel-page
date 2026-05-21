@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { motion } from "motion/react";
+import sorelLogo from "../assets/Sorel_logo_noi.svg";
 
 export function Footer() {
   return (
@@ -25,7 +27,17 @@ export function Footer() {
       <div className="container mx-auto px-6 py-12 md:px-16">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-16">
           <div>
-            <p className="mb-3 text-[24px] font-bold text-white">
+            <Link to="/" className="mb-4 inline-block">
+              <motion.img
+                src={sorelLogo}
+                alt="Sorel Plastiques"
+                className="h-12 w-auto brightness-0 invert"
+                whileHover={{ scale: 1.08, rotate: -2 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              />
+            </Link>
+            <p className="mb-3 text-[18px] font-semibold text-white">
               Sorel Plastiques
             </p>
             <p className="mb-6 text-sm leading-relaxed text-zinc-400">

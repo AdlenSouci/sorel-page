@@ -1,5 +1,7 @@
 import { ArrowRight, Image as ImageIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion } from "motion/react";
+import sorelLogo from "../assets/Sorel_logo_noi.svg";
 
 const GAMME_PLACEHOLDER_COUNT = 4;
 
@@ -9,6 +11,20 @@ export function Home() {
       <section className="relative flex min-h-[88vh] flex-col items-center justify-center overflow-hidden px-6 pt-2 pb-16 md:px-16">
         <div className="relative z-10 mx-auto w-full max-w-4xl rounded-[2rem] bg-white/98 px-8 py-10 shadow-xl backdrop-blur-sm md:px-12 md:py-12">
           <div className="text-center">
+            <motion.div
+              className="mb-6 flex justify-center"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <motion.img
+                src={sorelLogo}
+                alt="Sorel Plastiques"
+                className="h-16 w-auto md:h-20"
+                whileHover={{ scale: 1.1, rotate: 3 }}
+                transition={{ type: "spring", stiffness: 300, damping: 15 }}
+              />
+            </motion.div>
             <h1 className="mb-4 text-[clamp(2.25rem,7vw,4.25rem)] font-bold leading-[1.08] tracking-tight text-slate-950">
               SOREL PLASTIQUES
             </h1>

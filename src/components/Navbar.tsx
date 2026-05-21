@@ -3,6 +3,7 @@ import { Clock, Home, Mail, PieChart, Search } from "lucide-react";
 import { LayoutGroup, motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 import { Link, NavLink, useLocation, type Location } from "react-router-dom";
+import sorelLogo from "../assets/Sorel_logo_noi.svg";
 
 const bubble = {
   type: "spring" as const,
@@ -111,9 +112,24 @@ export function Navbar() {
 
   return (
     <nav
-      className="pointer-events-none fixed inset-x-0 top-[max(0.65rem,env(safe-area-inset-top))] z-[200] flex justify-center px-3 pt-0.5"
+      className="pointer-events-none fixed inset-x-0 top-[max(0.65rem,env(safe-area-inset-top))] z-[200] flex items-start justify-between px-3 pt-0.5"
       aria-label="Navigation principale"
     >
+      {/* Logo Sorel à gauche */}
+      <Link
+        to="/"
+        className="pointer-events-auto mt-2 ml-2 md:ml-4"
+      >
+        <motion.img
+          src={sorelLogo}
+          alt="Sorel Plastiques"
+          className="h-10 w-auto md:h-12"
+          whileHover={{ scale: 1.05, rotate: 2 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        />
+      </Link>
+
       <div className="pointer-events-auto flex w-[min(calc(100vw-26px),58rem)] max-w-none flex-col items-center">
         {/* Léger halo sous la pilule — pas une seconde bordure */}
         <div
