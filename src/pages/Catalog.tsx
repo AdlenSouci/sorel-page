@@ -1,24 +1,55 @@
-import { Image as ImageIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { ProductDTO } from "../types/product";
-import { getCatalogProducts } from "../lib/api";
+import { Link, useParams } from "react-router-dom";
+import { fetchCategories, fetchCategoryCatalog } from "../lib/api";
+import type { CatalogueItemDTO, CategoryDTO } from "../types/category";
 
 export function Catalog() {
-  const [products, setProducts] = useState<ProductDTO[] | null>(null);
-  const [source, setSource] = useState<"api" | "demo" | null>(null);
+  const { slug } = useParams<{ slug?: string }>();
+  const [categories, setCategories] = useState<CategoryDTO[] | null>(null);
+  const [items, setItems] = useState<CatalogueItemDTO[] | null>(null);
+  const [activeCategory, setActiveCategory] = useState<CategoryDTO | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
+
     void (async () => {
-      const { source: s, products: rows } = await getCatalogProducts();
-      if (cancelled) return;
-      setSource(s);
-      setProducts(rows);
+      setLoading(true);
+      setError(null);
+      try {
+        const cats = await fetchCategories();
+        if (cancelled) return;
+        setCategories(cats);
+
+        if (slug) {
+          const { category, items: rows } = await fetchCategoryCatalog(slug);
+          if (cancelled) return;
+          setActiveCategory(category);
+          setItems(rows);
+        } else {
+          setActiveCategory(null);
+          setItems(null);
+        }
+      } catch (e) {
+        if (cancelled) return;
+        setError(
+          e instanceof Error
+            ? e.message
+            : "Impossible de joindre l'API. Lancez npm run dev:full.",
+        );
+        setCategories(null);
+        setItems(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
+
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [slug]);
 
   return (
     <div className="px-6 py-14 md:px-16 md:py-24">
@@ -27,85 +58,99 @@ export function Catalog() {
           Catalogue
         </p>
         <h1 className="mt-4 text-4xl font-bold tracking-tight text-slate-950 md:text-5xl">
-          Produits disponibles
+          {activeCategory ? activeCategory.nom : "Nos catégories"}
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-lg leading-[1.65] text-slate-800">
-          Liste affichée ici même sans base de données&nbsp;: contenu démo dans le
-          code. Plus tard, la même page pourra lire vos produits depuis l&apos;API /
-          Prisma lorsque tout sera branché.
+          {activeCategory
+            ? `${items?.length ?? 0} article(s) dans cette catégorie.`
+            : "Choisissez une catégorie pour afficher les produits (base sorel_local)."}
         </p>
       </header>
 
       <div className="mx-auto max-w-7xl">
-        {source === "demo" ? (
-          <div className="mb-8 rounded-2xl bg-amber-50/80 px-5 py-4 text-center text-[15px] text-amber-900">
-            Catalogue démo — l&apos;API n&apos;a pas répondu (normal si vous ne
-            lancez pas le serveur). Les fiches sont des données locales.
+        {slug ? (
+          <Link
+            to="/catalogue"
+            className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-orange-700 hover:text-orange-800"
+          >
+            <ArrowLeft className="size-4" aria-hidden />
+            Toutes les catégories
+          </Link>
+        ) : null}
+
+        {error ? (
+          <div className="mb-8 rounded-2xl bg-red-50 px-5 py-4 text-center text-[15px] text-red-900">
+            {error}
           </div>
         ) : null}
 
-        {products === null ? (
+        {loading ? (
           <div className="flex items-center justify-center gap-3 text-slate-600">
             <Loader2 className="size-7 animate-spin" aria-hidden />
-            <span>Chargement du catalogue…</span>
+            <span>Chargement…</span>
           </div>
         ) : null}
 
-        {products?.length === 0 ? (
+        {!loading && !slug && categories?.length ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {categories.map((c) => (
+              <Link
+                key={c.id}
+                to={`/catalogue/${c.slug}`}
+                className="flex flex-col rounded-2xl bg-white/98 p-6 shadow-lg ring-1 ring-slate-900/5 transition hover:-translate-y-0.5 hover:shadow-xl"
+              >
+                <h2 className="text-lg font-bold text-slate-950">{c.nom}</h2>
+                <p className="mt-2 text-sm text-slate-600">
+                  {c.productCount ?? 0} produit(s)
+                </p>
+              </Link>
+            ))}
+          </div>
+        ) : null}
+
+        {!loading && !slug && categories?.length === 0 ? (
           <p className="text-center text-slate-600">
-            Aucun produit renvoyé par l&apos;API.
+            Aucune catégorie dans la table <code>categories</code>.
           </p>
         ) : null}
 
-        {products && products.length ? (
+        {!loading && slug && items?.length ? (
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-4">
-            {products.map((p) => (
+            {items.map((p) => (
               <article
                 key={p.id}
-                className="flex h-full flex-col rounded-2xl bg-white/98 p-7 shadow-lg transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+                className="flex h-full flex-col rounded-2xl bg-white/98 p-7 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
               >
-                <div
-                  className="mb-6 flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-slate-100 text-slate-400 ring-1 ring-slate-900/5"
-                  aria-hidden={p.imageUrl ? undefined : true}
-                >
-                  {p.imageUrl ? (
+                <div className="mb-6 flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-slate-100 text-slate-400 ring-1 ring-slate-900/5">
+                  {p.photo ? (
                     <img
-                      src={p.imageUrl}
-                      alt={p.title}
+                      src={p.photo}
+                      alt={p.libelle}
                       className="h-full w-full object-cover"
                     />
                   ) : (
                     <ImageIcon className="size-10 opacity-55" strokeWidth={1.25} />
                   )}
                 </div>
-                {p.category ? (
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-orange-700">
-                    {p.category}
-                  </p>
-                ) : null}
-                <h2 className="mt-3 text-xl font-bold tracking-tight text-slate-950">
-                  {p.title}
+                <h2 className="text-xl font-bold tracking-tight text-slate-950">
+                  {p.libelle}
                 </h2>
-                {p.description ? (
-                  <p className="mt-3 flex-1 text-[15px] leading-[1.65] text-slate-900">
-                    {p.description}
+                {p.variante ? (
+                  <p className="mt-2 text-[15px] text-slate-700">{p.variante}</p>
+                ) : null}
+                {p.codeArticle ? (
+                  <p className="mt-4 truncate text-[11px] text-slate-500">
+                    {p.codeArticle}
                   </p>
                 ) : null}
-                <p className="mt-5 truncate text-[11px] text-slate-500">
-                  {p.slug}
-                </p>
               </article>
             ))}
           </div>
         ) : null}
 
-        {source === "api" ? (
-          <p className="mt-12 text-center text-sm text-slate-500">
-            Données servies par l&apos;API. Pour la base SQLite locale&nbsp;:{" "}
-            <code className="rounded bg-black/5 px-1.5 py-0.5">npm run db:push</code>{" "}
-            puis{" "}
-            <code className="rounded bg-black/5 px-1.5 py-0.5">npm run db:seed</code>
-            .
+        {!loading && slug && items?.length === 0 ? (
+          <p className="text-center text-slate-600">
+            Aucun article dans cette catégorie.
           </p>
         ) : null}
       </div>

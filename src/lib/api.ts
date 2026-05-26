@@ -1,5 +1,4 @@
-import type { ProductDTO } from "../types/product";
-import { DEMO_CATALOG } from "../data/demoCatalog";
+import type { CatalogueItemDTO, CategoryDTO } from "../types/category";
 
 function apiUrl(path: string) {
   const base = (import.meta.env.VITE_API_URL ?? "").replace(/\/*$/, "");
@@ -11,53 +10,25 @@ function apiUrl(path: string) {
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(apiUrl(path), init);
   if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`);
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? `HTTP ${res.status}`);
   }
   return res.json() as Promise<T>;
 }
 
-/** Lecture API stricte (échoue si pas de serveur). */
-export async function fetchProducts(): Promise<ProductDTO[]> {
-  return fetchJson<ProductDTO[]>("/api/products");
+export async function fetchCategories(): Promise<CategoryDTO[]> {
+  return fetchJson<CategoryDTO[]>("/api/categories");
 }
 
-/**
- * Essaie l’API, sinon renvoie le catalogue démo (pas de base requise).
- */
-export async function getCatalogProducts(): Promise<{
-  source: "api" | "demo";
-  products: ProductDTO[];
-}> {
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 2500);
+export type CategoryCatalogResponse = {
+  category: CategoryDTO;
+  items: CatalogueItemDTO[];
+};
 
-  try {
-    const products = await fetchJson<ProductDTO[]>("/api/products", {
-      signal: controller.signal,
-    });
-    window.clearTimeout(timeout);
-    return { source: "api", products };
-  } catch {
-    window.clearTimeout(timeout);
-    const sorted = [...DEMO_CATALOG].sort((a, b) => a.sortOrder - b.sortOrder);
-    return { source: "demo", products: sorted };
-  }
-}
-
-export async function fetchProductBySlug(
+export async function fetchCategoryCatalog(
   slug: string,
-): Promise<ProductDTO | null> {
-  const ctrl = new AbortController();
-  const tid = window.setTimeout(() => ctrl.abort(), 2500);
-  try {
-    const p = await fetchJson<ProductDTO>(
-      `/api/products/${encodeURIComponent(slug)}`,
-      { signal: ctrl.signal },
-    );
-    window.clearTimeout(tid);
-    return p;
-  } catch {
-    window.clearTimeout(tid);
-    return DEMO_CATALOG.find((q) => q.slug === slug) ?? null;
-  }
+): Promise<CategoryCatalogResponse> {
+  return fetchJson<CategoryCatalogResponse>(
+    `/api/categories/${encodeURIComponent(slug)}/items`,
+  );
 }
