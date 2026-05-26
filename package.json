@@ -9,7 +9,7 @@
     "dev:full": "concurrently \"vite\" \"tsx watch server/index.ts\"",
     "dev:web": "vite",
     "dev:api": "tsx watch server/index.ts",
-    "build": "node scripts/fetch-categories.mjs && tsc -b && vite build",
+    "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "db:push": "prisma db push",
