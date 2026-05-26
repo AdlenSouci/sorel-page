@@ -1,16 +1,31 @@
-# Déploiement Vercel
+# Afficher les catégories sur Vercel
 
-## Variables (Production)
+## 1. Un fichier sur le serveur (FileZilla)
 
-1. **`DATABASE_URL`** — connexion MySQL de ta base en ligne (tables `categories`, `catalogue`)
-2. **`VITE_API_URL`** — **ne pas créer** (ou laisser vide)
+Fichier : `hosting/sorel-categories.php`  
+→ envoyer dans le dossier **public** du site (là où est `index.php`).
 
-Redeploy après modification.
+Renommer rien : **`sorel-categories.php`**
 
-## Test
+Ouvrir le fichier sur le serveur et mettre le **vrai mot de passe** MySQL (ligne `$password`, comme dans `.env` Laravel).  
+`$host` = souvent `localhost` sur l’hébergeur.
 
-- https://ton-site.vercel.app/api/health
-- https://ton-site.vercel.app/api/categories
-- https://ton-site.vercel.app/catalogue
+## 2. Test
 
-Si `/api/health` échoue : l’hébergeur MySQL doit autoriser les connexions distantes (cPanel → MySQL distant / accès distant).
+https://sorel-order.fr/sorel-categories.php  
+→ doit afficher du JSON.
+
+## 3. Vercel
+
+**Aucune variable obligatoire.**  
+Push sur GitHub → redeploy.
+
+Le site appelle automatiquement cette URL en production.
+
+## 4. Local
+
+```bash
+npm run dev:full
+```
+
+Pas besoin du fichier PHP en local.

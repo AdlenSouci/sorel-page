@@ -1,34 +1,28 @@
-import type { CatalogueItemDTO, CategoryDTO } from "../types/category";
+import type { CategoryDTO } from "../types/category";
 
-function apiUrl(path: string) {
-  const base = (import.meta.env.VITE_API_URL ?? "").replace(/\/*$/, "");
-  if (!base) return path;
-  const p = path.startsWith("/") ? path : `/${path}`;
-  return `${base}${p}`;
-}
+/** Local : npm run dev:full → /api/categories */
+const LOCAL_CATEGORIES = "/api/categories";
 
-async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(apiUrl(path), init);
-  if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { error?: string } | null;
-    throw new Error(body?.error ?? `HTTP ${res.status}`);
-  }
-  return res.json() as Promise<T>;
+/** Prod (Vercel) : fichier PHP sur le même serveur que la base */
+const PROD_CATEGORIES =
+  "https://sorel-order.fr/sorel-categories.php";
+
+function categoriesUrl(): string {
+  return import.meta.env.DEV ? LOCAL_CATEGORIES : PROD_CATEGORIES;
 }
 
 export async function fetchCategories(): Promise<CategoryDTO[]> {
-  return fetchJson<CategoryDTO[]>("/api/categories");
-}
-
-export type CategoryCatalogResponse = {
-  category: CategoryDTO;
-  items: CatalogueItemDTO[];
-};
-
-export async function fetchCategoryCatalog(
-  slug: string,
-): Promise<CategoryCatalogResponse> {
-  return fetchJson<CategoryCatalogResponse>(
-    `/api/categories/${encodeURIComponent(slug)}/items`,
-  );
+  const res = await fetch(categoriesUrl());
+  if (!res.ok) {
+    throw new Error(`Erreur ${res.status} — vérifie sorel-categories.php sur le serveur`);
+  }
+  const data = (await res.json()) as CategoryDTO[] | { error?: string };
+  if (!Array.isArray(data)) {
+    throw new Error(
+      typeof data === "object" && data && "error" in data
+        ? String(data.error)
+        : "Réponse invalide",
+    );
+  }
+  return data;
 }
