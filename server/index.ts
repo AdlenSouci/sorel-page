@@ -1,9 +1,8 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
-import { PrismaClient } from "@prisma/client";
+import { checkDatabase, getCategoryCatalog, listCategories } from "./handlers.js";
 
-const prisma = new PrismaClient();
 const app = express();
 const PORT = Number(process.env.API_PORT) || 3001;
 
@@ -12,71 +11,30 @@ app.use(express.json());
 
 app.get("/api/health", async (_req, res) => {
   try {
-    await prisma.$queryRaw`SELECT 1`;
-    res.json({ ok: true, database: "connected" });
+    res.json(await checkDatabase());
   } catch (e) {
     console.error(e);
     res.status(503).json({ ok: false, error: "Base de données inaccessible." });
   }
 });
 
-/** Toutes les catégories (table categories) */
 app.get("/api/categories", async (_req, res) => {
   try {
-    const rows = await prisma.category.findMany({
-      orderBy: [{ ordre: "asc" }, { nom: "asc" }],
-      include: { _count: { select: { catalogue: true } } },
-    });
-
-    res.json(
-      rows.map((c) => ({
-        id: c.id,
-        nom: c.nom,
-        slug: c.slug,
-        ordre: c.ordre,
-        productCount: c._count.catalogue,
-      })),
-    );
+    res.json(await listCategories());
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Impossible de charger les catégories." });
   }
 });
 
-/** Articles d'une catégorie (table catalogue) */
 app.get("/api/categories/:slug/items", async (req, res) => {
   try {
-    const category = await prisma.category.findUnique({
-      where: { slug: req.params.slug },
-    });
-
-    if (!category) {
+    const data = await getCategoryCatalog(req.params.slug);
+    if (!data) {
       res.status(404).json({ error: "Catégorie introuvable." });
       return;
     }
-
-    const items = await prisma.catalogue.findMany({
-      where: { categorieId: category.id },
-      orderBy: [{ libelle: "asc" }, { variante: "asc" }],
-    });
-
-    res.json({
-      category: {
-        id: category.id,
-        nom: category.nom,
-        slug: category.slug,
-        ordre: category.ordre,
-      },
-      items: items.map((item) => ({
-        id: item.id,
-        codeArticle: item.codeArticle?.trim() ?? null,
-        libelle: item.libelle,
-        variante: item.variante,
-        photo: item.photo,
-        categorySlug: category.slug,
-        categoryNom: category.nom,
-      })),
-    });
+    res.json(data);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Impossible de charger le catalogue." });
@@ -85,5 +43,7 @@ app.get("/api/categories/:slug/items", async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`API Sorel catalogue → http://localhost:${PORT}`);
-  console.log(`Base : ${process.env.DATABASE_URL?.replace(/:[^:@/]+@/, ":***@") ?? "(DATABASE_URL manquant)"}`);
+  console.log(
+    `Base : ${process.env.DATABASE_URL?.replace(/:[^:@/]+@/, ":***@") ?? "(DATABASE_URL manquant)"}`,
+  );
 });

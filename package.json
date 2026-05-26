@@ -32,6 +32,7 @@
     "react-router-dom": "^7.14.2"
   },
   "devDependencies": {
+    "@vercel/node": "^5.0.0",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.2.4",
     "@types/cors": "^2.8.19",
