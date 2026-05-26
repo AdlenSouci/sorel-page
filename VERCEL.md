@@ -1,25 +1,23 @@
 # Vercel
 
-## Variable (Production)
+Le build est simple : `npm run build` (pas de connexion MySQL sur Vercel).
 
-| Name | Value |
-|------|--------|
-| `DATABASE_URL` | `mysql://kera6497_sorel:y%21a%3Db_%40DDCYJ@sorel-order.fr:3306/kera6497_sorel-plastique` |
+Les catégories sont dans `src/data/categories.prod.json` (déjà rempli).
 
-Supprimer : `VITE_API_URL`, `VITE_CATALOG_BASE`, `VITE_SOREL_ORDER_URL`
+## Pour mettre à jour les catégories plus tard
 
-Après changement → **Redeploy**
+Sur ton PC, dans `sorel_page` :
 
-## Dans les logs du build, tu dois voir
-
-`OK : XX catégorie(s) → src/data/categories.prod.json`
-
-Si `DATABASE_URL manquant` → variable mal nommée ou pas en Production.
-
-## Push
-
-```bash
-git add .
-git commit -m "fix categories vercel"
+```powershell
+$env:DATABASE_URL="mysql://..."   # ta base en ligne
+node scripts/fetch-categories.mjs
+git add src/data/categories.prod.json
+git commit -m "maj categories"
 git push
 ```
+
+## Vercel
+
+- Pas besoin de `DATABASE_URL` pour afficher le catalogue
+- Supprimer Neon si présent
+- **Build Command** : vide (utilise vercel.json)

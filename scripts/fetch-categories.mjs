@@ -8,11 +8,9 @@ import mysql from "mysql2/promise";
 const OUT = "src/data/categories.prod.json";
 
 const SQL = `
-  SELECT c.id, c.nom, c.slug, c.ordre, COUNT(ca.id) AS productCount
-  FROM categories c
-  LEFT JOIN catalogue ca ON ca.categorie_id = c.id
-  GROUP BY c.id, c.nom, c.slug, c.ordre
-  ORDER BY c.ordre, c.nom
+  SELECT id, nom, slug, ordre, 0 AS productCount
+  FROM categories
+  ORDER BY ordre, nom
 `;
 
 fs.mkdirSync("src/data", { recursive: true });
@@ -31,5 +29,6 @@ try {
   console.log(`OK : ${rows.length} catégorie(s) → ${OUT}`);
 } catch (err) {
   console.error("ERREUR lecture base :", err.message);
-  process.exit(1);
+  if (!fs.existsSync(OUT)) fs.writeFileSync(OUT, "[]");
+  process.exit(0);
 }
