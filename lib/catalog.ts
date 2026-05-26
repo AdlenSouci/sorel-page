@@ -1,9 +1,4 @@
-import { prisma } from "./prisma.js";
-
-export async function checkDatabase() {
-  await prisma.$queryRaw`SELECT 1`;
-  return { ok: true as const, database: "connected" };
-}
+import { prisma } from "./db.js";
 
 export async function listCategories() {
   const rows = await prisma.category.findMany({
@@ -21,13 +16,8 @@ export async function listCategories() {
 }
 
 export async function getCategoryCatalog(slug: string) {
-  const category = await prisma.category.findUnique({
-    where: { slug },
-  });
-
-  if (!category) {
-    return null;
-  }
+  const category = await prisma.category.findUnique({ where: { slug } });
+  if (!category) return null;
 
   const items = await prisma.catalogue.findMany({
     where: { categorieId: category.id },

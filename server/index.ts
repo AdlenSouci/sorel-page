@@ -1,7 +1,8 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
-import { checkDatabase, getCategoryCatalog, listCategories } from "./handlers.js";
+import { getCategoryCatalog, listCategories } from "../lib/catalog.js";
+import { prisma } from "../lib/db.js";
 
 const app = express();
 const PORT = Number(process.env.API_PORT) || 3001;
@@ -11,7 +12,8 @@ app.use(express.json());
 
 app.get("/api/health", async (_req, res) => {
   try {
-    res.json(await checkDatabase());
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ ok: true, database: "connected" });
   } catch (e) {
     console.error(e);
     res.status(503).json({ ok: false, error: "Base de données inaccessible." });
@@ -42,8 +44,5 @@ app.get("/api/categories/:slug/items", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`API Sorel catalogue → http://localhost:${PORT}`);
-  console.log(
-    `Base : ${process.env.DATABASE_URL?.replace(/:[^:@/]+@/, ":***@") ?? "(DATABASE_URL manquant)"}`,
-  );
+  console.log(`API catalogue → http://localhost:${PORT}`);
 });

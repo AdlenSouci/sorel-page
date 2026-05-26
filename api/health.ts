@@ -1,15 +1,17 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { checkDatabase } from "../server/handlers.js";
+import { prisma } from "../lib/db.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
+
   try {
-    res.status(200).json(await checkDatabase());
+    await prisma.$queryRaw`SELECT 1`;
+    res.status(200).json({ ok: true, database: "connected" });
   } catch (e) {
-    console.error(e);
+    console.error("[api/health]", e);
     res.status(503).json({ ok: false, error: "Base de données inaccessible." });
   }
 }

@@ -1,7 +1,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getCategoryCatalog } from "../../../server/handlers.js";
+import { getCategoryCatalog } from "../../../lib/catalog.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+
+  if (req.method === "OPTIONS") {
+    res.status(204).end();
+    return;
+  }
+
   if (req.method !== "GET") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -21,7 +28,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     res.status(200).json(data);
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Impossible de charger le catalogue." });
+    console.error("[api/categories/items]", e);
+    const message = e instanceof Error ? e.message : "Erreur inconnue";
+    res.status(500).json({
+      error: "Impossible de charger le catalogue.",
+      detail: process.env.NODE_ENV === "production" ? undefined : message,
+    });
   }
 }

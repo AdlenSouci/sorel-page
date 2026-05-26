@@ -1,20 +1,16 @@
-# Vercel + base distante
+# Déploiement Vercel
 
-Le site Vercel est **statique**. L’API catalogue est sur **sorel-order.fr** (Laravel, déjà connecté à MySQL).
+## Variables (Production)
 
-## Variable Vercel (obligatoire)
+1. **`DATABASE_URL`** — connexion MySQL de ta base en ligne (tables `categories`, `catalogue`)
+2. **`VITE_API_URL`** — **ne pas créer** (ou laisser vide)
 
-**Settings → Environment Variables → Production**
+Redeploy après modification.
 
-| Key | Value |
-|-----|--------|
-| `VITE_API_URL` | `https://sorel-order.fr` |
+## Test
 
-Puis **Redeploy**.
+- https://ton-site.vercel.app/api/health
+- https://ton-site.vercel.app/api/categories
+- https://ton-site.vercel.app/catalogue
 
-Tu n’as **pas** besoin de `DATABASE_URL` sur Vercel.
-
-## Tester
-
-1. https://sorel-order.fr/api/categories → JSON des catégories  
-2. https://ton-site.vercel.app/catalogue → liste des catégories  
+Si `/api/health` échoue : l’hébergeur MySQL doit autoriser les connexions distantes (cPanel → MySQL distant / accès distant).

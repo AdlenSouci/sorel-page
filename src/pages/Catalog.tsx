@@ -37,7 +37,7 @@ export function Catalog() {
         setError(
           e instanceof Error
             ? e.message
-            : "Impossible de joindre l'API. Lancez npm run dev:full.",
+            : "Impossible de charger les données. En local : npm run dev:full",
         );
         setCategories(null);
         setItems(null);
