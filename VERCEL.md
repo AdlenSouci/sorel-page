@@ -1,23 +1,18 @@
-# Vercel
+# Déploiement Vercel
 
-Le build est simple : `npm run build` (pas de connexion MySQL sur Vercel).
+Site **100 % statique** : les catégories sont dans `src/data/categories.prod.json`.
 
-Les catégories sont dans `src/data/categories.prod.json` (déjà rempli).
+- Pas de `DATABASE_URL` sur Vercel
+- Pas d’appel à sorel-order.fr
 
-## Pour mettre à jour les catégories plus tard
+## Push
 
-Sur ton PC, dans `sorel_page` :
-
-```powershell
-$env:DATABASE_URL="mysql://..."   # ta base en ligne
-node scripts/fetch-categories.mjs
-git add src/data/categories.prod.json
-git commit -m "maj categories"
+```bash
+git add .
+git commit -m "fix vercel static deploy"
 git push
 ```
 
-## Vercel
+Sur Vercel : le dernier deploy doit être **Ready** (vert).
 
-- Pas besoin de `DATABASE_URL` pour afficher le catalogue
-- Supprimer Neon si présent
-- **Build Command** : vide (utilise vercel.json)
+Puis **Ctrl+Shift+R** sur https://sorel-page.vercel.app/catalogue
