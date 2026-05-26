@@ -9,7 +9,7 @@
     "dev:full": "concurrently \"vite\" \"tsx watch server/index.ts\"",
     "dev:web": "vite",
     "dev:api": "tsx watch server/index.ts",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/fetch-categories.mjs && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "db:push": "prisma db push",
@@ -21,6 +21,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "mysql2": "^3.14.0",
     "@vercel/node": "^5.0.0",
     "@prisma/client": "^5.22.0",
     "prisma": "^5.22.0",

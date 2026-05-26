@@ -1,31 +1,25 @@
-# Afficher les catégories sur Vercel
+# Vercel
 
-## 1. Un fichier sur le serveur (FileZilla)
+## Variable (Production)
 
-Fichier : `hosting/sorel-categories.php`  
-→ envoyer dans le dossier **public** du site (là où est `index.php`).
+| Name | Value |
+|------|--------|
+| `DATABASE_URL` | `mysql://kera6497_sorel:y%21a%3Db_%40DDCYJ@sorel-order.fr:3306/kera6497_sorel-plastique` |
 
-Renommer rien : **`sorel-categories.php`**
+Supprimer : `VITE_API_URL`, `VITE_CATALOG_BASE`, `VITE_SOREL_ORDER_URL`
 
-Ouvrir le fichier sur le serveur et mettre le **vrai mot de passe** MySQL (ligne `$password`, comme dans `.env` Laravel).  
-`$host` = souvent `localhost` sur l’hébergeur.
+Après changement → **Redeploy**
 
-## 2. Test
+## Dans les logs du build, tu dois voir
 
-https://sorel-order.fr/sorel-categories.php  
-→ doit afficher du JSON.
+`OK : XX catégorie(s) → src/data/categories.prod.json`
 
-## 3. Vercel
+Si `DATABASE_URL manquant` → variable mal nommée ou pas en Production.
 
-**Aucune variable obligatoire.**  
-Push sur GitHub → redeploy.
-
-Le site appelle automatiquement cette URL en production.
-
-## 4. Local
+## Push
 
 ```bash
-npm run dev:full
+git add .
+git commit -m "fix categories vercel"
+git push
 ```
-
-Pas besoin du fichier PHP en local.
