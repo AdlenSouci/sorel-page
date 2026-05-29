@@ -15,6 +15,24 @@ export async function listCategories() {
   }));
 }
 
+export async function listFeaturedProducts(limit = 4) {
+  const items = await prisma.catalogue.findMany({
+    take: limit,
+    orderBy: { id: "desc" },
+    include: { categorie: true },
+  });
+
+  return items.map((item) => ({
+    id: item.id,
+    codeArticle: item.codeArticle?.trim() ?? null,
+    libelle: item.libelle,
+    variante: item.variante,
+    photo: item.photo,
+    categorySlug: item.categorie.slug,
+    categoryNom: item.categorie.nom,
+  }));
+}
+
 export async function getCategoryCatalog(slug: string) {
   const category = await prisma.category.findUnique({ where: { slug } });
   if (!category) return null;

@@ -1,11 +1,44 @@
-import { ArrowRight, Image as ImageIcon } from "lucide-react";
+import { ArrowRight, Image as ImageIcon, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import sorelLogo from "../assets/Sorel_logo_noi.svg";
+import {
+  fetchFeaturedProducts,
+  itemTitle,
+  resolvePhotoUrl,
+} from "../lib/api";
+import type { CatalogueItemDTO } from "../types/category";
 
-const GAMME_PLACEHOLDER_COUNT = 4;
+const FEATURED_COUNT = 4;
 
 export function Home() {
+  const [featured, setFeatured] = useState<CatalogueItemDTO[] | null>(null);
+  const [featuredError, setFeaturedError] = useState<string | null>(null);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const items = await fetchFeaturedProducts(FEATURED_COUNT);
+        if (!cancelled) setFeatured(items);
+      } catch (e) {
+        if (!cancelled) {
+          setFeaturedError(
+            e instanceof Error ? e.message : "Erreur de chargement",
+          );
+          setFeatured(null);
+        }
+      } finally {
+        if (!cancelled) setLoadingFeatured(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div>
       <section className="relative flex min-h-[88vh] flex-col items-center justify-center overflow-hidden px-6 pt-2 pb-16 md:px-16">
@@ -66,34 +99,71 @@ export function Home() {
             Nos gammes phares
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-slate-800">
-            Color Tonic et finitions — catalogue mis à jour depuis notre base.
+            Articles issus de notre catalogue en ligne.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: GAMME_PLACEHOLDER_COUNT }, (_, index) => (
-            <Link
-              key={index}
-              to="/catalogue"
-              className="group block cursor-pointer"
-            >
-              <div className="mb-4 overflow-hidden rounded-2xl bg-white shadow-md transition-all group-hover:scale-105 group-hover:shadow-xl">
-                <div
-                  className="flex aspect-[4/3] w-full items-center justify-center bg-slate-100 text-slate-400"
-                  aria-hidden
+        {featuredError ? (
+          <p className="mx-auto mb-8 max-w-xl rounded-2xl bg-red-50 px-5 py-4 text-center text-sm text-red-900">
+            {featuredError}
+          </p>
+        ) : null}
+
+        {loadingFeatured ? (
+          <div className="flex justify-center gap-3 py-12 text-slate-600">
+            <Loader2 className="size-7 animate-spin" aria-hidden />
+            <span>Chargement des articles…</span>
+          </div>
+        ) : null}
+
+        {!loadingFeatured && featured && featured.length > 0 ? (
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {featured.map((item) => {
+              const photo = resolvePhotoUrl(item.photo);
+              return (
+                <Link
+                  key={item.id}
+                  to={`/catalogue/${encodeURIComponent(item.categorySlug)}`}
+                  className="group block"
                 >
-                  <ImageIcon className="size-12 opacity-60" strokeWidth={1.5} />
-                </div>
-              </div>
-              <p className="text-center font-semibold text-slate-950">
-                Color Tonic
-              </p>
-              <p className="mt-1 text-center text-sm leading-snug text-slate-700">
-                Visuel à venir — fiche au catalogue
-              </p>
+                  <div className="mb-4 overflow-hidden rounded-2xl bg-white shadow-md transition-all group-hover:scale-[1.02] group-hover:shadow-xl">
+                    {photo ? (
+                      <img
+                        src={photo}
+                        alt=""
+                        className="aspect-[4/3] w-full object-cover bg-slate-100"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div
+                        className="flex aspect-[4/3] w-full items-center justify-center bg-slate-100 text-slate-400"
+                        aria-hidden
+                      >
+                        <ImageIcon className="size-12 opacity-60" strokeWidth={1.5} />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-center font-semibold text-slate-950">
+                    {itemTitle(item)}
+                  </p>
+                  <p className="mt-1 text-center text-sm leading-snug text-slate-700">
+                    {item.categoryNom}
+                    {item.codeArticle ? ` · ${item.codeArticle}` : ""}
+                  </p>
+                </Link>
+              );
+            })}
+          </div>
+        ) : null}
+
+        {!loadingFeatured && !featuredError && featured?.length === 0 ? (
+          <p className="text-center text-slate-600">
+            Aucun article en base pour le moment.{" "}
+            <Link to="/catalogue" className="font-semibold text-orange-700 hover:underline">
+              Voir le catalogue
             </Link>
-          ))}
-        </div>
+          </p>
+        ) : null}
       </div>
     </div>
   );

@@ -5,12 +5,47 @@ import type {
 } from "../types/category";
 
 /**
- * Catalogue : toujours l’API du site sorel-page (/api/…).
- * Sur https://sorel-page.vercel.app → /api/categories (serverless + MySQL).
+ * API catalogue sur o2switch (PHP, même serveur que MySQL).
+ * Obligatoire sur Vercel : VITE_CATALOG_API_URL au build.
+ * Local sans cette variable : /api via Express (npm run dev:full).
  */
-const API = "/api";
+function catalogApiBase(): string | null {
+  const raw = import.meta.env.VITE_CATALOG_API_URL?.trim();
+  if (!raw) return null;
+  return raw.replace(/\/$/, "");
+}
 
-/** Photos : URL complète en base, sinon chemin relatif au site vitrine. */
+function isSinglePhpEndpoint(base: string): boolean {
+  return base.endsWith(".php");
+}
+
+function categoriesUrl(): string {
+  const base = catalogApiBase();
+  if (!base) return "/api/categories";
+  return isSinglePhpEndpoint(base)
+    ? `${base}?action=categories`
+    : `${base}/categories.php`;
+}
+
+function itemsUrl(slug: string): string {
+  const base = catalogApiBase();
+  if (!base) {
+    return `/api/categories/${encodeURIComponent(slug)}/items`;
+  }
+  return isSinglePhpEndpoint(base)
+    ? `${base}?action=items&slug=${encodeURIComponent(slug)}`
+    : `${base}/items.php?slug=${encodeURIComponent(slug)}`;
+}
+
+function featuredUrl(limit: number): string {
+  const base = catalogApiBase();
+  if (!base) return `/api/featured?limit=${limit}`;
+  return isSinglePhpEndpoint(base)
+    ? `${base}?action=featured&limit=${limit}`
+    : `${base}/featured.php?limit=${limit}`;
+}
+
+/** Préfixe pour photos en chemin relatif (/storage/…) */
 export function resolvePhotoUrl(photo: string | null): string | null {
   if (!photo?.trim()) return null;
   const p = photo.trim();
@@ -26,7 +61,7 @@ async function parseJson<T>(res: Response): Promise<T> {
 
   if (trimmed.startsWith("<") || trimmed.startsWith("<!")) {
     throw new Error(
-      "Le serveur a renvoyé du HTML au lieu de JSON. Vérifiez DATABASE_URL (ou DB_*) sur Vercel, puis redéployez.",
+      "L’API catalogue n’est pas disponible (réponse HTML). Uploadez hosting/sorel-catalog-api.php sur sorel-order.fr et définissez VITE_CATALOG_API_URL sur Vercel.",
     );
   }
 
@@ -52,17 +87,22 @@ async function parseJson<T>(res: Response): Promise<T> {
 }
 
 export async function fetchCategories(): Promise<CategoryDTO[]> {
-  const res = await fetch(`${API}/categories`);
+  const res = await fetch(categoriesUrl());
   return parseJson<CategoryDTO[]>(res);
 }
 
 export async function fetchCategoryCatalog(
   slug: string,
 ): Promise<CategoryCatalogDTO> {
-  const res = await fetch(
-    `${API}/categories/${encodeURIComponent(slug)}/items`,
-  );
+  const res = await fetch(itemsUrl(slug));
   return parseJson<CategoryCatalogDTO>(res);
+}
+
+export async function fetchFeaturedProducts(
+  limit = 4,
+): Promise<CatalogueItemDTO[]> {
+  const res = await fetch(featuredUrl(limit));
+  return parseJson<CatalogueItemDTO[]>(res);
 }
 
 export function itemTitle(item: CatalogueItemDTO): string {

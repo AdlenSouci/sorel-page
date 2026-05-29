@@ -4,7 +4,11 @@ import { ensureDatabaseUrl } from "../lib/database-url.js";
 ensureDatabaseUrl();
 import cors from "cors";
 import express from "express";
-import { getCategoryCatalog, listCategories } from "../lib/catalog.js";
+import {
+  getCategoryCatalog,
+  listCategories,
+  listFeaturedProducts,
+} from "../lib/catalog.js";
 import { prisma } from "../lib/db.js";
 
 const app = express();
@@ -29,6 +33,16 @@ app.get("/api/categories", async (_req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Impossible de charger les catégories." });
+  }
+});
+
+app.get("/api/featured", async (req, res) => {
+  try {
+    const limit = Math.max(1, Math.min(12, Number(req.query.limit) || 4));
+    res.json(await listFeaturedProducts(limit));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Impossible de charger les articles." });
   }
 });
 

@@ -1,30 +1,30 @@
-# sorel-page sur Vercel
+# sorel-page.vercel.app
 
-**Site vitrine :** https://sorel-page.vercel.app  
-**Base MySQL :** hébergée chez o2switch (tables `categories`, `catalogue`).
+## Pourquoi /api/categories échoue sur Vercel
 
-Ce dépôt n’est **pas** le site sorel-order.fr (commandes Laravel). Les deux peuvent partager la **même base**, mais le catalogue vitrine tourne sur **sorel-page.vercel.app**.
+Vercel **ne peut pas** se connecter à MySQL o2switch (`DB_HOST=sorel-order.fr`) : la base n’accepte que les connexions **depuis le serveur o2switch** (127.0.0.1).
 
-## Variables sur Vercel (Settings → Environment Variables)
+## Solution (obligatoire)
 
-Importer les mêmes identifiants que dans votre `.env` :
+### 1. Un fichier PHP sur sorel-order.fr
 
-| Variable | Exemple |
-|----------|---------|
-| `DB_HOST` | hôte MySQL cPanel (accès distant), pas forcément `127.0.0.1` |
-| `DB_PORT` | `3306` |
-| `DB_DATABASE` | `kera6497_sorel-plastique` |
-| `DB_USERNAME` | `kera6497_sorel` |
-| `DB_PASSWORD` | votre mot de passe |
+1. Ouvrir `hosting/sorel-catalog-api.php`
+2. Remplacer `METS_TON_MOT_DE_PASSE_ICI` par le mot de passe MySQL
+3. Envoyer le fichier à la **racine publique** du site (FileZilla → `public_html/sorel-catalog-api.php`)
+4. Tester : https://sorel-order.fr/sorel-catalog-api.php?action=categories → JSON
 
-**Ou** une seule ligne : `DATABASE_URL=mysql://user:pass@host:3306/kera6497_sorel-plastique`
+### 2. Variable sur Vercel (build)
 
-Ne pas définir `VITE_CATALOG_API_URL` ni `VITE_SOREL_ORDER_URL` (inutiles pour ce site).
+| Variable | Valeur |
+|----------|--------|
+| `VITE_CATALOG_API_URL` | `https://sorel-order.fr/sorel-catalog-api.php` |
+| `VITE_MEDIA_BASE_URL` | `https://sorel-order.fr` (si photos en /storage/…) |
 
-**Redeploy** après chaque changement.
+**Redeploy** après ajout.
 
-## Test
+### 3. Vérifier
 
-https://sorel-page.vercel.app/api/categories → JSON des catégories.
+- https://sorel-page.vercel.app/catalogue
+- Accueil → « Nos gammes phares » = vrais articles
 
-Puis https://sorel-page.vercel.app/catalogue
+Ne pas compter sur `DB_*` / `DATABASE_URL` sur Vercel pour le catalogue (sauf accès MySQL distant activé dans cPanel).
