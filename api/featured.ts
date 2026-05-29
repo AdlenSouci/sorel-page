@@ -1,5 +1,6 @@
 import "dotenv/config";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { buildDbSnapshot, toApiError } from "../lib/api-error.js";
 import { ensureDatabaseUrl } from "../lib/database-url.js";
 import { listFeaturedProducts } from "../lib/catalog.js";
 
@@ -28,6 +29,10 @@ export default async function handler(
     res.status(200).json(items);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: "Impossible de charger les articles." });
+    res.status(500).json({
+      error: "Impossible de charger les articles.",
+      details: toApiError(e),
+      db: buildDbSnapshot(),
+    });
   }
 }

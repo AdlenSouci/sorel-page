@@ -2,7 +2,7 @@ import "dotenv/config";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { buildDbSnapshot, toApiError } from "../lib/api-error.js";
 import { ensureDatabaseUrl } from "../lib/database-url.js";
-import { listCategories } from "../lib/catalog.js";
+import { prisma } from "../lib/db.js";
 
 ensureDatabaseUrl();
 
@@ -17,19 +17,24 @@ export default async function handler(
     res.status(204).end();
     return;
   }
+
   if (req.method !== "GET") {
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
 
   try {
-    const categories = await listCategories();
-    res.status(200).json(categories);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({
-      error: "Impossible de charger les catégories.",
-      details: toApiError(e),
+    await prisma.$queryRaw`SELECT 1`;
+    res.status(200).json({
+      ok: true,
+      database: "connected",
+      db: buildDbSnapshot(),
+    });
+  } catch (error) {
+    res.status(503).json({
+      ok: false,
+      database: "disconnected",
+      details: toApiError(error),
       db: buildDbSnapshot(),
     });
   }

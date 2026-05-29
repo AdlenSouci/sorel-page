@@ -1,5 +1,6 @@
 import "dotenv/config";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { buildDbSnapshot, toApiError } from "../../../../lib/api-error.js";
 import { ensureDatabaseUrl } from "../../../../lib/database-url.js";
 import { getCategoryCatalog } from "../../../../lib/catalog.js";
 
@@ -36,6 +37,10 @@ export default async function handler(
     res.status(200).json(data);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: "Impossible de charger le catalogue." });
+    res.status(500).json({
+      error: "Impossible de charger le catalogue.",
+      details: toApiError(e),
+      db: buildDbSnapshot(),
+    });
   }
 }
