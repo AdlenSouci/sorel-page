@@ -1,8 +1,8 @@
 import "dotenv/config";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { buildDbSnapshot, toApiError } from "../../../../lib/api-error.js";
-import { ensureDatabaseUrl } from "../../../../lib/database-url.js";
-import { getCategoryCatalog } from "../../../../lib/catalog.js";
+import { buildDbSnapshot, toApiError } from "../../../lib/api-error.js";
+import { ensureDatabaseUrl } from "../../../lib/database-url.js";
+import { getCategoryCatalog } from "../../../lib/catalog.js";
 
 ensureDatabaseUrl();
 
