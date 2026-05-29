@@ -1,4 +1,7 @@
 import "dotenv/config";
+import { ensureDatabaseUrl } from "../lib/database-url.js";
+
+ensureDatabaseUrl();
 import cors from "cors";
 import express from "express";
 import { getCategoryCatalog, listCategories } from "../lib/catalog.js";

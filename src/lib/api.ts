@@ -4,70 +4,65 @@ import type {
   CategoryDTO,
 } from "../types/category";
 
-function catalogApiBase(): string | null {
-  const raw = import.meta.env.VITE_CATALOG_API_URL?.trim();
-  if (!raw) return null;
-  return raw.replace(/\/$/, "");
-}
+/**
+ * Catalogue : toujours l’API du site sorel-page (/api/…).
+ * Sur https://sorel-page.vercel.app → /api/categories (serverless + MySQL).
+ */
+const API = "/api";
 
-function mediaBase(): string {
-  const order = import.meta.env.VITE_SOREL_ORDER_URL?.trim();
-  if (order) return order.replace(/\/$/, "");
-  const api = catalogApiBase();
-  if (api) {
-    try {
-      return new URL(api).origin;
-    } catch {
-      return "";
-    }
-  }
-  return "";
-}
-
-/** URL absolue pour les photos stockées en chemin relatif sur sorel-order. */
+/** Photos : URL complète en base, sinon chemin relatif au site vitrine. */
 export function resolvePhotoUrl(photo: string | null): string | null {
   if (!photo?.trim()) return null;
   const p = photo.trim();
   if (/^https?:\/\//i.test(p)) return p;
-  const base = mediaBase();
-  if (!base) return p.startsWith("/") ? p : `/${p}`;
-  return `${base}${p.startsWith("/") ? p : `/${p}`}`;
+  const base = import.meta.env.VITE_MEDIA_BASE_URL?.trim().replace(/\/$/, "");
+  if (base) return `${base}${p.startsWith("/") ? p : `/${p}`}`;
+  return p.startsWith("/") ? p : `/${p}`;
 }
 
 async function parseJson<T>(res: Response): Promise<T> {
+  const text = await res.text();
+  const trimmed = text.trimStart();
+
+  if (trimmed.startsWith("<") || trimmed.startsWith("<!")) {
+    throw new Error(
+      "Le serveur a renvoyé du HTML au lieu de JSON. Vérifiez DATABASE_URL (ou DB_*) sur Vercel, puis redéployez.",
+    );
+  }
+
+  let data: unknown;
+  try {
+    data = JSON.parse(text) as unknown;
+  } catch {
+    throw new Error("Réponse invalide (pas du JSON).");
+  }
+
   if (!res.ok) {
-    let message = `Erreur ${res.status}`;
-    try {
-      const body = (await res.json()) as { error?: string };
-      if (body.error) message = body.error;
-    } catch {
-      /* ignore */
-    }
+    const message =
+      typeof data === "object" &&
+      data !== null &&
+      "error" in data &&
+      typeof (data as { error: unknown }).error === "string"
+        ? (data as { error: string }).error
+        : `Erreur ${res.status}`;
     throw new Error(message);
   }
-  return res.json() as Promise<T>;
+
+  return data as T;
 }
 
-/**
- * Catégories : API PHP sur o2switch (VITE_CATALOG_API_URL) ou Express local (/api).
- */
 export async function fetchCategories(): Promise<CategoryDTO[]> {
-  const base = catalogApiBase();
-  const url = base ? `${base}/categories.php` : "/api/categories";
-  return parseJson<CategoryDTO[]>(await fetch(url));
+  const res = await fetch(`${API}/categories`);
+  return parseJson<CategoryDTO[]>(res);
 }
 
-/**
- * Articles d'une catégorie (même source que fetchCategories).
- */
 export async function fetchCategoryCatalog(
   slug: string,
 ): Promise<CategoryCatalogDTO> {
-  const base = catalogApiBase();
-  const url = base
-    ? `${base}/items.php?slug=${encodeURIComponent(slug)}`
-    : `/api/categories/${encodeURIComponent(slug)}/items`;
-  return parseJson<CategoryCatalogDTO>(await fetch(url));
+  const res = await fetch(
+    `${API}/categories/${encodeURIComponent(slug)}/items`,
+  );
+  return parseJson<CategoryCatalogDTO>(res);
 }
 
 export function itemTitle(item: CatalogueItemDTO): string {
