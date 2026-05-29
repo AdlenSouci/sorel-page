@@ -1,30 +1,49 @@
-# sorel-page.vercel.app
+# sorel-page — déploiement GitHub → Vercel uniquement
 
-## Pourquoi /api/categories échoue sur Vercel
+Ce dépôt **sorel_page** : vous poussez sur **GitHub**, Vercel déploie tout seul.  
+Rien à envoyer à la main sur Vercel.
 
-Vercel **ne peut pas** se connecter à MySQL o2switch (`DB_HOST=sorel-order.fr`) : la base n’accepte que les connexions **depuis le serveur o2switch** (127.0.0.1).
+## Ce qui part avec GitHub (automatique)
 
-## Solution (obligatoire)
+- Le site React → https://sorel-page.vercel.app
+- Les routes API dans le dossier `api/` :
+  - `/api/categories`
+  - `/api/categories/:slug/items`
+  - `/api/featured`
 
-### 1. Un fichier PHP sur sorel-order.fr
+Le front appelle **`/api/...` sur le même domaine** (sorel-page.vercel.app), pas sorel-order.fr.
 
-1. Ouvrir `hosting/sorel-catalog-api.php`
-2. Remplacer `METS_TON_MOT_DE_PASSE_ICI` par le mot de passe MySQL
-3. Envoyer le fichier à la **racine publique** du site (FileZilla → `public_html/sorel-catalog-api.php`)
-4. Tester : https://sorel-order.fr/sorel-catalog-api.php?action=categories → JSON
+## Ce que vous configurez sur vercel.com (une fois)
 
-### 2. Variable sur Vercel (build)
+Projet lié à GitHub → **Settings → Environment Variables** :
 
 | Variable | Valeur |
 |----------|--------|
-| `VITE_CATALOG_API_URL` | `https://sorel-order.fr/sorel-catalog-api.php` |
-| `VITE_MEDIA_BASE_URL` | `https://sorel-order.fr` (si photos en /storage/…) |
+| `DB_HOST` | Hôte MySQL **distant** (cPanel o2switch, pas `127.0.0.1`) |
+| `DB_PORT` | `3306` |
+| `DB_DATABASE` | `kera6497_sorel-plastique` |
+| `DB_USERNAME` | `kera6497_sorel` |
+| `DB_PASSWORD` | votre mot de passe |
 
-**Redeploy** après ajout.
+**Ne pas** définir `VITE_CATALOG_API_URL` (réservé à un autre scénario, pas GitHub→Vercel).
 
-### 3. Vérifier
+Optionnel : `VITE_MEDIA_BASE_URL` = `https://sorel-order.fr` si les photos en base sont des chemins `/storage/...`
 
-- https://sorel-page.vercel.app/catalogue
-- Accueil → « Nos gammes phares » = vrais articles
+Chaque **push sur GitHub** = nouveau déploiement. Après changement de variables, cliquer **Redeploy**.
 
-Ne pas compter sur `DB_*` / `DATABASE_URL` sur Vercel pour le catalogue (sauf accès MySQL distant activé dans cPanel).
+## Test
+
+https://sorel-page.vercel.app/api/categories → JSON
+
+Puis `/catalogue` et l’accueil.
+
+## Si /api/categories renvoie encore une erreur
+
+o2switch bloque souvent MySQL depuis l’extérieur. Dans cPanel : activer **accès distant MySQL** et utiliser l’hôte indiqué (ex. `kera6497.odns.fr`), pas `sorel-order.fr`.
+
+## Le fichier `hosting/sorel-catalog-api.php`
+
+Ce n’est **pas** pour Vercel ni pour GitHub→Vercel.  
+C’est pour le **serveur sorel-order.fr** (autre hébergement), seulement si la connexion MySQL depuis Vercel est impossible.
+
+Pour sorel-page, tout doit passer par **Git push + variables Vercel**.
