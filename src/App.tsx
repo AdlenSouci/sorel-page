@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { About } from "./pages/About";
 import { Catalog } from "./pages/Catalog";
+import { CategoryDetail } from "./pages/CategoryDetail";
 import { Contact } from "./pages/Contact";
 import { Home } from "./pages/Home";
 
@@ -13,6 +14,7 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="a-propos" element={<About />} />
           <Route path="catalogue" element={<Catalog />} />
+          <Route path="catalogue/:slug" element={<CategoryDetail />} />
           <Route path="contact" element={<Contact />} />
         </Route>
       </Routes>

@@ -57,15 +57,16 @@ export function Catalog() {
         {!loading && categories?.length ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {categories.map((c) => (
-              <div
+              <Link
                 key={c.id}
-                className="rounded-2xl bg-white/98 p-6 shadow-lg ring-1 ring-slate-900/5"
+                to={`/catalogue/${encodeURIComponent(c.slug)}`}
+                className="rounded-2xl bg-white/98 p-6 shadow-lg ring-1 ring-slate-900/5 transition hover:ring-orange-300/60 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500"
               >
                 <h2 className="text-lg font-bold text-slate-950">{c.nom}</h2>
                 <p className="mt-2 text-sm text-slate-600">
-                  {c.productCount ?? 0} produit(s)
+                  {c.productCount ?? 0} produit{c.productCount === 1 ? "" : "s"}
                 </p>
-              </div>
+              </Link>
             ))}
           </div>
         ) : null}

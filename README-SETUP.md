@@ -1,20 +1,30 @@
 # sorel_page — catalogue vitrine
 
-Site React + API Express + Prisma sur MySQL **sorel_local** (tables `categories` et `catalogue`).
+Site React (Vercel) + API PHP sur o2switch (MySQL `categories` / `catalogue`).
 
-## Configuration
+## Production (Vercel)
 
-Copier `.env.example` vers `.env` et adapter `DATABASE_URL`.
+Variables obligatoires :
 
-## Lancer
+- `VITE_CATALOG_API_URL` = `https://sorel-order.fr/catalog-api`
+- `VITE_SOREL_ORDER_URL` = `https://sorel-order.fr`
+
+Voir `VERCEL.md` et déployer `hosting/catalog-api/` sur o2switch.
+
+## Développement local
 
 ```bash
 npm install
-npx prisma generate
+cp .env.example .env   # ou copie manuelle sous Windows
+npm run dev
+```
+
+Avec `.env` pointant vers l’API PHP en ligne, le front utilise la vraie base sans Express.
+
+**Alternative** : laisser `VITE_CATALOG_API_URL` vide et lancer :
+
+```bash
 npm run dev:full
 ```
 
-- Front : http://localhost:5173/catalogue
-- API : http://localhost:3001/api/categories
-
-Ne pas lancer `db:push` si les tables existent déjà.
+(Express + `DATABASE_URL` vers MySQL local ou tunnel.)

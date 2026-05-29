@@ -15,3 +15,8 @@ export type CatalogueItemDTO = {
   categorySlug: string;
   categoryNom: string;
 };
+
+export type CategoryCatalogDTO = {
+  category: Pick<CategoryDTO, "id" | "nom" | "slug" | "ordre">;
+  items: CatalogueItemDTO[];
+};

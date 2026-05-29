@@ -66,8 +66,7 @@ export function Home() {
             Nos gammes phares
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-slate-800">
-            Color Tonic et finitions — catalogue mis à jour depuis notre base (à
-            brancher).
+            Color Tonic et finitions — catalogue mis à jour depuis notre base.
           </p>
         </div>
 

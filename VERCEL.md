@@ -1,18 +1,27 @@
 # Déploiement Vercel
 
-Site **100 % statique** : les catégories sont dans `src/data/categories.prod.json`.
+Le catalogue lit la **base MySQL sur o2switch** via l’API PHP (`hosting/catalog-api`), pas via une connexion directe depuis Vercel.
 
-- Pas de `DATABASE_URL` sur Vercel
-- Pas d’appel à sorel-order.fr
+## Variables d’environnement (Vercel → Settings → Environment Variables)
 
-## Push
+| Variable | Exemple |
+|----------|---------|
+| `VITE_CATALOG_API_URL` | `https://sorel-order.fr/catalog-api` |
+| `VITE_SOREL_ORDER_URL` | `https://sorel-order.fr` |
 
-```bash
-git add .
-git commit -m "fix vercel static deploy"
-git push
-```
+Puis **Redeploy** (obligatoire après changement de variable `VITE_*`).
 
-Sur Vercel : le dernier deploy doit être **Ready** (vert).
+## API PHP sur o2switch
 
-Puis **Ctrl+Shift+R** sur https://sorel-page.vercel.app/catalogue
+1. Copier `hosting/catalog-api/config.example.php` → `config.php` (mot de passe MySQL).
+2. Envoyer le dossier `catalog-api` sur le serveur (ex. `public_html/catalog-api/`).
+3. Tester dans le navigateur :
+   - `https://sorel-order.fr/catalog-api/categories.php`
+   - `https://sorel-order.fr/catalog-api/items.php?slug=bol`
+
+## Développement local
+
+- **Avec l’API en ligne** : copier `.env.example` → `.env`, `npm run dev`.
+- **Avec Express + Prisma** : laisser `VITE_CATALOG_API_URL` vide, `npm run dev:full` + `DATABASE_URL`.
+
+Ne pas committer `.env` (secrets).
