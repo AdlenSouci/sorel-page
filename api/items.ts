@@ -1,8 +1,8 @@
 import "dotenv/config";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { buildDbSnapshot, toApiError } from "../../../lib/api-error.js";
-import { getCategoryCatalog } from "../../../lib/catalog.js";
-import { ensureDatabaseUrl } from "../../../lib/database-url.js";
+import { buildDbSnapshot, toApiError } from "../lib/api-error.js";
+import { getCategoryCatalog } from "../lib/catalog.js";
+import { ensureDatabaseUrl } from "../lib/database-url.js";
 
 ensureDatabaseUrl();
 
@@ -22,13 +22,7 @@ export default async function handler(
     return;
   }
 
-  const slug =
-    typeof req.query.slug === "string"
-      ? req.query.slug
-      : typeof (req as { query?: { slug?: string } }).query?.slug === "string"
-        ? (req as { query: { slug: string } }).query.slug
-        : "";
-
+  const slug = typeof req.query.slug === "string" ? req.query.slug.trim() : "";
   if (!slug) {
     res.status(400).json({ error: "Slug manquant." });
     return;
@@ -44,7 +38,7 @@ export default async function handler(
   } catch (e) {
     console.error(e);
     res.status(500).json({
-      error: "Impossible de charger le catalogue.",
+      error: "Impossible de charger les articles.",
       details: toApiError(e),
       db: buildDbSnapshot(),
     });

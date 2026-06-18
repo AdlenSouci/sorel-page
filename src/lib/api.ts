@@ -31,11 +31,7 @@ function categoriesUrl(): string {
 function itemsUrl(slug: string): string {
   const base = catalogApiBase();
   if (!base) {
-    const sp = new URLSearchParams({
-      view: "items",
-      slug,
-    });
-    return `/api/categories?${sp}`;
+    return `/api/items?slug=${encodeURIComponent(slug)}`;
   }
   return isSinglePhpEndpoint(base)
     ? `${base}?action=items&slug=${encodeURIComponent(slug)}`

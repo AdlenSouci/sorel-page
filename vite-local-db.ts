@@ -8,6 +8,19 @@ import {
   getCategoryCatalog,
 } from "./server/catalog-queries.js";
 
+function sendCategoryItems(
+  res: ServerResponse,
+  slug: string,
+) {
+  return getCategoryCatalog(slug).then((data) => {
+    if (!data) {
+      sendJson(res, 404, { error: "Catégorie introuvable." });
+      return;
+    }
+    sendJson(res, 200, data);
+  });
+}
+
 function sendJson(res: ServerResponse, status: number, body: unknown) {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -34,6 +47,22 @@ async function handleLocalDb(
     if (pathname === "/api/health") {
       const db = await checkDb();
       sendJson(res, 200, { ok: true, db });
+      return;
+    }
+
+    if (pathname === "/api/items") {
+      const slug = searchParams.get("slug") ?? "";
+      if (!slug) {
+        sendJson(res, 400, { error: "Slug manquant." });
+        return;
+      }
+      await sendCategoryItems(res, slug);
+      return;
+    }
+
+    const categoryItemsMatch = pathname.match(/^\/api\/categories\/([^/]+)\/items$/);
+    if (categoryItemsMatch) {
+      await sendCategoryItems(res, decodeURIComponent(categoryItemsMatch[1]));
       return;
     }
 

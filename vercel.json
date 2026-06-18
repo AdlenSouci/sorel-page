@@ -3,16 +3,16 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/categories/:slug/items",
+      "destination": "/api/items?slug=:slug"
+    },
+    {
       "source": "/api/catalog-filters",
       "destination": "/api/categories?view=filters"
     },
     {
       "source": "/api/products",
       "destination": "/api/categories?view=products"
-    },
-    {
-      "source": "/api/categories/:slug/items",
-      "destination": "/api/categories?slug=:slug&view=items"
     },
     {
       "source": "/((?!api/).*)",
