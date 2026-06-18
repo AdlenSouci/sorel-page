@@ -250,6 +250,64 @@ export async function getArticles(opts?: Parameters<typeof getCatalogProducts>[0
   return getCatalogProducts(opts);
 }
 
+type CategoryDetailRow = RowDataPacket & {
+  id: number;
+  nom: string;
+  slug: string;
+  ordre: number;
+};
+
+type CategoryItemRow = RowDataPacket & {
+  id: number;
+  code_article: string | null;
+  libelle: string;
+  variante: string | null;
+  photo: string | null;
+};
+
+export async function getCategoryCatalog(slug: string) {
+  const { table, hasActif } = await getArticlesMeta();
+  const [catRows] = await pool.query<CategoryDetailRow[]>(
+    `
+    SELECT c.id, c.nom, c.slug, c.ordre
+    FROM categories c
+    WHERE c.slug = ? AND c.actif = 1 AND ${CLEAN_CATEGORY_SQL}
+    LIMIT 1
+    `,
+    [slug],
+  );
+  const category = catRows[0];
+  if (!category) return null;
+
+  const [items] = await pool.query<CategoryItemRow[]>(
+    `
+    SELECT a.id, a.code_article, a.libelle, a.variante, a.photo
+    FROM ${table} a
+    WHERE a.categorie_id = ? AND ${activeArticleSql("a", hasActif)}
+    ORDER BY a.libelle ASC, a.variante ASC
+    `,
+    [category.id],
+  );
+
+  return {
+    category: {
+      id: category.id,
+      nom: category.nom,
+      slug: category.slug,
+      ordre: category.ordre,
+    },
+    items: items.map((item) => ({
+      id: item.id,
+      codeArticle: item.code_article?.trim() ?? null,
+      libelle: item.libelle,
+      variante: item.variante,
+      photo: item.photo,
+      categorySlug: category.slug,
+      categoryNom: category.nom,
+    })),
+  };
+}
+
 export async function checkDb() {
   await pool.query("SELECT 1");
   return process.env.DB_NAME ?? process.env.DB_DATABASE ?? "sorel_local";

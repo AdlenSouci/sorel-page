@@ -5,11 +5,12 @@ import type {
 } from "../types/category";
 
 /**
- * API catalogue sur o2switch (PHP, même serveur que MySQL).
- * Obligatoire sur Vercel : VITE_CATALOG_API_URL au build.
- * Local sans cette variable : /api via Express (npm run dev:full).
+ * En production (Vercel + Aiven) : toujours /api sur le même domaine.
+ * VITE_CATALOG_API_URL = optionnel en dev local uniquement (API PHP o2switch).
  */
 function catalogApiBase(): string | null {
+  if (import.meta.env.PROD) return null;
+
   const raw = import.meta.env.VITE_CATALOG_API_URL?.trim();
   if (!raw) return null;
   return raw.replace(/\/$/, "");
@@ -61,7 +62,7 @@ async function parseJson<T>(res: Response): Promise<T> {
 
   if (trimmed.startsWith("<") || trimmed.startsWith("<!")) {
     throw new Error(
-      "L’API catalogue n’est pas disponible (réponse HTML). Uploadez hosting/sorel-catalog-api.php sur sorel-order.fr et définissez VITE_CATALOG_API_URL sur Vercel.",
+      "L’API catalogue a renvoyé du HTML au lieu de JSON. Vérifiez que les routes /api/* fonctionnent sur Vercel (et supprimez VITE_CATALOG_API_URL des variables d’environnement).",
     );
   }
 

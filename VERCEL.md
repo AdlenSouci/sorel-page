@@ -15,7 +15,7 @@ Pour **Aiven MySQL** :
 
 Optionnel : `VITE_MEDIA_BASE_URL` = `https://sorel-order.fr`
 
-**Ne pas** définir `VITE_CATALOG_API_URL` pour le déploiement standard.
+**Ne pas** définir `VITE_CATALOG_API_URL` — le site utilise `/api/*` sur Vercel + Aiven MySQL.
 
 Après changement → **Redeploy**.
 

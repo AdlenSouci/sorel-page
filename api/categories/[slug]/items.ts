@@ -2,7 +2,7 @@ import "dotenv/config";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { buildDbSnapshot, toApiError } from "../../../lib/api-error.js";
 import { ensureDatabaseUrl } from "../../../lib/database-url.js";
-import { getCategoryCatalog } from "../../../lib/catalog.js";
+import { getCategoryCatalog } from "../../../server/catalog-queries.js";
 
 ensureDatabaseUrl();
 
@@ -22,7 +22,13 @@ export default async function handler(
     return;
   }
 
-  const slug = typeof req.query.slug === "string" ? req.query.slug : "";
+  const slug =
+    typeof req.query.slug === "string"
+      ? req.query.slug
+      : typeof (req as { query?: { slug?: string } }).query?.slug === "string"
+        ? (req as { query: { slug: string } }).query.slug
+        : "";
+
   if (!slug) {
     res.status(400).json({ error: "Slug manquant." });
     return;
