@@ -1,4 +1,4 @@
-﻿import { ArrowRight, Image as ImageIcon, Loader2 } from "lucide-react";
+﻿import { ArrowRight, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
@@ -105,9 +105,12 @@ export function Home() {
                 className="group block"
               >
                 <div className="mb-4 overflow-hidden rounded-2xl bg-white shadow-md transition-all group-hover:scale-[1.03] group-hover:shadow-xl">
-                  <div className="flex aspect-[4/3] items-center justify-center bg-slate-100 text-slate-400">
-                    <ImageIcon className="size-10 opacity-55" strokeWidth={1.5} />
-                  </div>
+                  <img
+                    src="/product-placeholder.svg"
+                    alt={gamme.nom}
+                    className="aspect-[4/3] w-full bg-slate-100 object-cover"
+                    loading="lazy"
+                  />
                 </div>
                 <p className="text-center font-semibold text-slate-950">{gamme.nom}</p>
                 <p className="mt-1 text-center text-sm text-slate-600">

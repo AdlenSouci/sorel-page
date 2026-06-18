@@ -1,8 +1,10 @@
-﻿import { ArrowRight, Image as ImageIcon, Loader2 } from "lucide-react";
+﻿import { ArrowRight, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchCategories } from "../lib/catalog";
 import type { CategoryDTO } from "../types/catalog";
+
+const PLACEHOLDER = "/product-placeholder.svg";
 
 export function Catalog() {
   const [categories, setCategories] = useState<CategoryDTO[] | null>(null);
@@ -50,9 +52,12 @@ export function Catalog() {
                 className="group block"
               >
                 <div className="mb-3 overflow-hidden rounded-2xl bg-white shadow-md transition-all group-hover:scale-[1.03] group-hover:shadow-xl">
-                  <div className="flex aspect-[4/3] items-center justify-center bg-slate-100 text-slate-400">
-                    <ImageIcon className="size-10 opacity-55" strokeWidth={1.5} />
-                  </div>
+                  <img
+                    src={PLACEHOLDER}
+                    alt={cat.nom}
+                    className="aspect-[4/3] w-full bg-slate-100 object-cover"
+                    loading="lazy"
+                  />
                 </div>
                 <p className="text-center font-semibold text-slate-950">
                   {cat.nom}
