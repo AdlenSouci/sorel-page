@@ -1,4 +1,4 @@
-import { ArrowRight, Image as ImageIcon, Loader2 } from "lucide-react";
+﻿import { ArrowRight, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
@@ -45,7 +45,7 @@ export function Home() {
             </p>
             <p className="mx-auto max-w-2xl text-[17px] leading-[1.65] text-slate-800">
               Plastiques techniques, gammes Color Tonic et solutions sur mesure pour
-              l&apos;industrie, le bâtiment et l&apos;aménagement intérieur.
+              l&apos;industrie, le b├ótiment et l&apos;am├®nagement int├®rieur.
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
               <Link
@@ -59,7 +59,7 @@ export function Home() {
                 href="#produits"
                 className="text-sm font-semibold text-[#27E4F5] underline decoration-[#27E4F5]/60 underline-offset-4 hover:text-[#1fb3c4]"
               >
-                Découvrir les gammes
+                D├®couvrir les gammes
               </a>
             </div>
           </div>
@@ -72,7 +72,7 @@ export function Home() {
       >
         <div className="mb-14 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-600">
-            Nos références
+            Nos r├®f├®rences
           </p>
           <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 md:text-4xl">
             Nos gammes phares
@@ -80,13 +80,13 @@ export function Home() {
           <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-slate-800">
             {gammes?.length
               ? `${gammes.length} gammes phares.`
-              : "Chargement des gammes…"}
+              : "Chargement des gammesÔÇª"}
           </p>
         </div>
 
         {gammesError ? (
           <p className="mb-8 text-center text-sm text-red-700">
-            Base locale inaccessible — vérifiez MySQL et le fichier{" "}
+            Base locale inaccessible ÔÇö v├®rifiez MySQL et le fichier{" "}
             <code className="rounded bg-red-100 px-1.5">.env</code>.
           </p>
         ) : null}

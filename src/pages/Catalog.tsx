@@ -1,4 +1,4 @@
-import {
+﻿import {
   Image as ImageIcon,
   Loader2,
   Search,
@@ -204,7 +204,7 @@ export function Catalog() {
           <div className="mb-5 flex items-baseline justify-between gap-4">
             <p className="text-sm text-slate-600">
               {loadingProducts
-                ? "Chargement…"
+                ? "ChargementÔÇª"
                 : `${products?.length ?? 0} produit${(products?.length ?? 0) > 1 ? "s" : ""}`}
             </p>
           </div>
@@ -216,7 +216,7 @@ export function Catalog() {
           ) : null}
 
           {!loadingProducts && products?.length === 0 ? (
-            <p className="py-20 text-center text-slate-600">Aucun produit trouvé.</p>
+            <p className="py-20 text-center text-slate-600">Aucun produit trouv├®.</p>
           ) : null}
 
           {!loadingProducts && products && products.length > 0 ? (
@@ -269,7 +269,7 @@ function CatalogSidebar({
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Rechercher un produit…"
+          placeholder="Rechercher un produitÔÇª"
           className="w-full rounded-lg border border-slate-200 py-2.5 pr-3 pl-9 text-sm outline-none transition focus:border-[#27E4F5] focus:ring-2 focus:ring-[#27E4F5]/20"
         />
       </form>
@@ -299,7 +299,7 @@ function CatalogSidebar({
         onChange={(v) => onSort(v as ArticleSort)}
         options={[
           { value: "gamme", label: "Par gamme" },
-          { value: "nom", label: "Nom A → Z" },
+          { value: "nom", label: "Nom A ÔåÆ Z" },
         ]}
       />
 
@@ -308,7 +308,7 @@ function CatalogSidebar({
         onClick={onReset}
         className="w-full rounded-lg border border-slate-200 py-2.5 text-sm text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
       >
-        Réinitialiser
+        R├®initialiser
       </button>
     </div>
   );
@@ -364,7 +364,7 @@ function ColorFilter({
         ].join(" ")}
       >
         <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-dashed border-slate-300 bg-white text-[9px] text-slate-400">
-          ∅
+          Ôêà
         </span>
         Toutes les couleurs
       </button>
@@ -375,7 +375,7 @@ function ColorFilter({
           type="search"
           value={colorQ}
           onChange={(e) => setColorQ(e.target.value)}
-          placeholder="Chercher une couleur…"
+          placeholder="Chercher une couleurÔÇª"
           className="w-full rounded-lg border border-slate-200 py-2 pr-2 pl-8 text-xs outline-none focus:border-[#27E4F5] focus:ring-1 focus:ring-[#27E4F5]"
         />
       </div>
@@ -391,7 +391,7 @@ function ColorFilter({
           />
         ))}
         {filtered.length === 0 ? (
-          <li className="py-4 text-center text-xs text-slate-400">Aucune couleur trouvée</li>
+          <li className="py-4 text-center text-xs text-slate-400">Aucune couleur trouv├®e</li>
         ) : null}
       </ul>
 
@@ -433,7 +433,7 @@ function ColorFilterRow({
       <button
         type="button"
         onClick={onClick}
-        title={`${nom} — ${count} produit${count > 1 ? "s" : ""}`}
+        title={`${nom} ÔÇö ${count} produit${count > 1 ? "s" : ""}`}
         className={[
           "flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm transition",
           active
@@ -505,7 +505,7 @@ function ActiveFilters({
           swatch={variante}
         />
       ) : null}
-      {q ? <FilterChip label={`« ${q} »`} onRemove={onClearQ} /> : null}
+      {q ? <FilterChip label={`┬½ ${q} ┬╗`} onRemove={onClearQ} /> : null}
       <button
         type="button"
         onClick={onClearAll}

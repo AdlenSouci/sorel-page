@@ -1,4 +1,4 @@
-import "dotenv/config";
+﻿import "dotenv/config";
 import express from "express";
 import {
   checkDb,
@@ -27,7 +27,7 @@ app.get("/api/categories", async (req, res) => {
     }));
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: "Impossible de charger les catégories." });
+    res.status(500).json({ error: "Impossible de charger les cat├®gories." });
   }
 });
 
@@ -79,5 +79,5 @@ app.get("/api/articles", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`MySQL ${process.env.DB_NAME ?? "sorel_local"} → :${PORT}`);
+  console.log(`MySQL ${process.env.DB_NAME ?? "sorel_local"} ÔåÆ :${PORT}`);
 });
