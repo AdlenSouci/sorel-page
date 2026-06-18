@@ -4,57 +4,7 @@ import type {
   CategoryDTO,
 } from "../types/category";
 
-/**
- * En production (Vercel + Aiven) : toujours /api sur le même domaine.
- * VITE_CATALOG_API_URL = optionnel en dev local uniquement (API PHP o2switch).
- */
-function catalogApiBase(): string | null {
-  if (import.meta.env.PROD) return null;
-
-  const raw = import.meta.env.VITE_CATALOG_API_URL?.trim();
-  if (!raw) return null;
-  return raw.replace(/\/$/, "");
-}
-
-function isSinglePhpEndpoint(base: string): boolean {
-  return base.endsWith(".php");
-}
-
-function categoriesUrl(): string {
-  const base = catalogApiBase();
-  if (!base) return "/api/categories";
-  return isSinglePhpEndpoint(base)
-    ? `${base}?action=categories`
-    : `${base}/categories.php`;
-}
-
-function itemsUrl(slug: string): string {
-  const base = catalogApiBase();
-  if (!base) {
-    return `/api/items?slug=${encodeURIComponent(slug)}`;
-  }
-  return isSinglePhpEndpoint(base)
-    ? `${base}?action=items&slug=${encodeURIComponent(slug)}`
-    : `${base}/items.php?slug=${encodeURIComponent(slug)}`;
-}
-
-function featuredUrl(limit: number): string {
-  const base = catalogApiBase();
-  if (!base) return `/api/featured?limit=${limit}`;
-  return isSinglePhpEndpoint(base)
-    ? `${base}?action=featured&limit=${limit}`
-    : `${base}/featured.php?limit=${limit}`;
-}
-
-/** Préfixe pour photos en chemin relatif (/storage/…) */
-export function resolvePhotoUrl(photo: string | null): string | null {
-  if (!photo?.trim()) return null;
-  const p = photo.trim();
-  if (/^https?:\/\//i.test(p)) return p;
-  const base = import.meta.env.VITE_MEDIA_BASE_URL?.trim().replace(/\/$/, "");
-  if (base) return `${base}${p.startsWith("/") ? p : `/${p}`}`;
-  return p.startsWith("/") ? p : `/${p}`;
-}
+const useStaticCatalog = import.meta.env.PROD;
 
 async function parseJson<T>(res: Response): Promise<T> {
   const text = await res.text();
@@ -62,7 +12,7 @@ async function parseJson<T>(res: Response): Promise<T> {
 
   if (trimmed.startsWith("<") || trimmed.startsWith("<!")) {
     throw new Error(
-      "L’API catalogue a renvoyé du HTML au lieu de JSON. Redéployez le site sur Vercel.",
+      "Données catalogue introuvables. Attendez la fin du déploiement Vercel ou videz le cache du navigateur.",
     );
   }
 
@@ -85,6 +35,32 @@ async function parseJson<T>(res: Response): Promise<T> {
   }
 
   return data as T;
+}
+
+function staticCategoryUrl(slug: string): string {
+  return `/catalog/${encodeURIComponent(slug)}.json`;
+}
+
+function categoriesUrl(): string {
+  return useStaticCatalog ? "/catalog/categories.json" : "/api/categories";
+}
+
+function itemsUrl(slug: string): string {
+  return useStaticCatalog ? staticCategoryUrl(slug) : `/api/items?slug=${encodeURIComponent(slug)}`;
+}
+
+function featuredUrl(limit: number): string {
+  return `/api/featured?limit=${limit}`;
+}
+
+/** Préfixe pour photos en chemin relatif (/storage/…) */
+export function resolvePhotoUrl(photo: string | null): string | null {
+  if (!photo?.trim()) return null;
+  const p = photo.trim();
+  if (/^https?:\/\//i.test(p)) return p;
+  const base = import.meta.env.VITE_MEDIA_BASE_URL?.trim().replace(/\/$/, "");
+  if (base) return `${base}${p.startsWith("/") ? p : `/${p}`}`;
+  return p.startsWith("/") ? p : `/${p}`;
 }
 
 export async function fetchCategories(): Promise<CategoryDTO[]> {
