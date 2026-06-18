@@ -33,7 +33,8 @@ const CLEAN_CATEGORY_SQL = `
   AND c.nom NOT IN ('2023864', 'COUV.')
 `;
 
-const FILTER_GAMMES_LIMIT = 12;
+/** Gammes dans le filtre latéral — top N avec articles */
+const FILTER_GAMMES_LIMIT = 10;
 
 let articlesTableCache: string | null = null;
 let articlesHasActifCache: boolean | null = null;
@@ -67,12 +68,16 @@ export async function getCategories(opts?: {
   forFilter?: boolean;
 }) {
   const { table, hasActif } = await getArticlesMeta();
-  const limit = opts?.limit ? Math.min(opts.limit, 100) : 0;
   const featured = opts?.featured ?? false;
-  const forFilter = opts?.forFilter ?? false;
-  const clean = featured || forFilter;
-  const effectiveLimit = forFilter ? FILTER_GAMMES_LIMIT : limit;
-  const having = clean ? "HAVING article_count > 0" : "";
+  const forFilter =
+    opts?.forFilter ?? (!opts?.limit && !featured);
+  const limit = opts?.limit ? Math.min(opts.limit, 100) : 0;
+  const effectiveLimit = forFilter
+    ? FILTER_GAMMES_LIMIT
+    : limit > 0
+      ? limit
+      : 0;
+  const having = "HAVING article_count > 0";
   const order = featured || forFilter
     ? "ORDER BY article_count DESC, c.ordre ASC"
     : "ORDER BY c.ordre ASC, c.nom ASC";
@@ -81,10 +86,10 @@ export async function getCategories(opts?: {
     SELECT c.id, c.nom, c.slug, c.ordre,
            COUNT(DISTINCT a.libelle) AS article_count
     FROM categories c
-    LEFT JOIN ${table} a
+    INNER JOIN ${table} a
       ON a.categorie_id = c.id AND ${activeArticleSql("a", hasActif)}
     WHERE c.actif = 1
-    ${clean ? `AND ${CLEAN_CATEGORY_SQL}` : ""}
+    AND ${CLEAN_CATEGORY_SQL}
     GROUP BY c.id, c.nom, c.slug, c.ordre
     ${having}
     ${order}
@@ -114,7 +119,11 @@ export async function getCatalogFilters() {
 
 async function countDistinctProducts(opts?: { category?: string; variante?: string }) {
   const { table, hasActif } = await getArticlesMeta();
-  const conditions = [activeArticleSql("a", hasActif), "c.actif = 1", `(${CLEAN_CATEGORY_SQL})`];
+  const conditions = [
+    activeArticleSql("a", hasActif),
+    "c.actif = 1",
+    CLEAN_CATEGORY_SQL.trim(),
+  ];
   const params: string[] = [];
   if (opts?.category) {
     conditions.push("c.slug = ?");
@@ -174,7 +183,11 @@ export async function getCatalogProducts(opts?: {
   const sort = opts?.sort === "nom" ? "nom" : "gamme";
   const limit = Math.min(opts?.limit ?? 48, 200);
 
-  const conditions = [activeArticleSql("a", hasActif), "c.actif = 1", `(${CLEAN_CATEGORY_SQL})`];
+  const conditions = [
+    activeArticleSql("a", hasActif),
+    "c.actif = 1",
+    CLEAN_CATEGORY_SQL.trim(),
+  ];
   const params: Array<string | number> = [];
 
   if (categorySlug) {
