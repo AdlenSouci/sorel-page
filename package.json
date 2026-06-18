@@ -9,7 +9,7 @@
     "dev:full": "concurrently \"vite\" \"tsx watch server/index.ts\"",
     "dev:web": "vite",
     "dev:api": "tsx watch server/index.ts",
-    "build": "prisma generate && tsx scripts/build-catalog-data.ts && tsc -b && vite build",
+    "build": "prisma generate && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "db:push": "prisma db push",
