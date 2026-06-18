@@ -45,7 +45,7 @@ export function Home() {
             </p>
             <p className="mx-auto max-w-2xl text-[17px] leading-[1.65] text-slate-800">
               Plastiques techniques, gammes Color Tonic et solutions sur mesure pour
-              l&apos;industrie, le b├ótiment et l&apos;am├®nagement int├®rieur.
+              l&apos;industrie, le bâtiment et l&apos;aménagement intérieur.
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
               <Link
@@ -59,7 +59,7 @@ export function Home() {
                 href="#produits"
                 className="text-sm font-semibold text-[#27E4F5] underline decoration-[#27E4F5]/60 underline-offset-4 hover:text-[#1fb3c4]"
               >
-                D├®couvrir les gammes
+                Découvrir les gammes
               </a>
             </div>
           </div>
@@ -72,7 +72,7 @@ export function Home() {
       >
         <div className="mb-14 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-600">
-            Nos r├®f├®rences
+            Nos références
           </p>
           <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 md:text-4xl">
             Nos gammes phares
@@ -80,14 +80,13 @@ export function Home() {
           <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-slate-800">
             {gammes?.length
               ? `${gammes.length} gammes phares.`
-              : "Chargement des gammesÔÇª"}
+              : "Chargement des gammes…"}
           </p>
         </div>
 
         {gammesError ? (
           <p className="mb-8 text-center text-sm text-red-700">
-            Base locale inaccessible ÔÇö v├®rifiez MySQL et le fichier{" "}
-            <code className="rounded bg-red-100 px-1.5">.env</code>.
+            Catalogue momentanément indisponible.
           </p>
         ) : null}
 
@@ -102,7 +101,7 @@ export function Home() {
             {gammes.map((gamme) => (
               <Link
                 key={gamme.id}
-                to={`/catalogue?category=${encodeURIComponent(gamme.slug)}`}
+                to={`/catalogue/${encodeURIComponent(gamme.slug)}`}
                 className="group block"
               >
                 <div className="mb-4 overflow-hidden rounded-2xl bg-white shadow-md transition-all group-hover:scale-[1.03] group-hover:shadow-xl">
@@ -125,7 +124,7 @@ export function Home() {
               to="/catalogue"
               className="inline-flex items-center gap-2 text-sm font-semibold text-[#27E4F5] underline-offset-4 hover:underline"
             >
-              Voir tout le catalogue avec filtres
+              Voir toutes les catégories
               <ArrowRight className="size-4" aria-hidden />
             </Link>
           </div>
