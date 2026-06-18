@@ -1,13 +1,6 @@
 import mysql from "mysql2/promise";
+import { poolOptions } from "../lib/mysql-ssl.js";
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST ?? "localhost",
-  port: Number(process.env.DB_PORT ?? 3306),
-  user: process.env.DB_USER ?? "root",
-  password: process.env.DB_PASSWORD ?? "",
-  database: process.env.DB_NAME ?? "sorel_local",
-  waitForConnections: true,
-  connectionLimit: 10,
-});
+const pool = mysql.createPool(poolOptions());
 
 export { pool };

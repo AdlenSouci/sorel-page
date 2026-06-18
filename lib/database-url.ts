@@ -3,11 +3,21 @@
  * Sur Vercel / .env import, on accepte aussi DB_HOST, DB_DATABASE, etc. (format Laravel).
  */
 export function ensureDatabaseUrl(): void {
-  if (process.env.DATABASE_URL?.trim()) return;
+  const existing = process.env.DATABASE_URL?.trim();
+  if (existing) {
+    const needsSsl =
+      (existing.includes("aivencloud.com") || process.env.DB_SSL === "1") &&
+      !existing.includes("sslaccept=");
+    if (needsSsl) {
+      process.env.DATABASE_URL =
+        existing + (existing.includes("?") ? "&" : "?") + "sslaccept=strict";
+    }
+    return;
+  }
 
   const host = process.env.DB_HOST?.trim();
-  const database = process.env.DB_DATABASE?.trim();
-  const username = process.env.DB_USERNAME?.trim();
+  const database = process.env.DB_NAME?.trim() || process.env.DB_DATABASE?.trim();
+  const username = process.env.DB_USER?.trim() || process.env.DB_USERNAME?.trim();
   if (!host || !database || !username) return;
 
   const port = process.env.DB_PORT?.trim() || "3306";
@@ -15,5 +25,10 @@ export function ensureDatabaseUrl(): void {
   const user = encodeURIComponent(username);
   const pass = encodeURIComponent(password);
 
-  process.env.DATABASE_URL = `mysql://${user}:${pass}@${host}:${port}/${database}`;
+  const ssl =
+    host.includes("aivencloud.com") || process.env.DB_SSL === "1"
+      ? "?sslaccept=strict"
+      : "";
+
+  process.env.DATABASE_URL = `mysql://${user}:${pass}@${host}:${port}/${database}${ssl}`;
 }

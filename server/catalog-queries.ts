@@ -33,14 +33,40 @@ const CLEAN_CATEGORY_SQL = `
   AND c.nom NOT IN ('2023864', 'COUV.')
 `;
 
-/** Gammes principales pour le filtre (pas les 47 — les plus utiles) */
 const FILTER_GAMMES_LIMIT = 12;
+
+let articlesTableCache: string | null = null;
+let articlesHasActifCache: boolean | null = null;
+
+async function getArticlesMeta() {
+  if (articlesTableCache) {
+    return { table: articlesTableCache, hasActif: articlesHasActifCache! };
+  }
+
+  const [rows] = await pool.query<RowDataPacket[]>(
+  `SHOW TABLES LIKE 'catalogue_articles'`,
+  );
+  if (rows.length > 0) {
+    articlesTableCache = "catalogue_articles";
+    articlesHasActifCache = true;
+    return { table: articlesTableCache, hasActif: true };
+  }
+
+  articlesTableCache = "catalogue";
+  articlesHasActifCache = false;
+  return { table: articlesTableCache, hasActif: false };
+}
+
+function activeArticleSql(alias: string, hasActif: boolean) {
+  return hasActif ? `${alias}.actif = 1` : "1=1";
+}
 
 export async function getCategories(opts?: {
   limit?: number;
   featured?: boolean;
   forFilter?: boolean;
 }) {
+  const { table, hasActif } = await getArticlesMeta();
   const limit = opts?.limit ? Math.min(opts.limit, 100) : 0;
   const featured = opts?.featured ?? false;
   const forFilter = opts?.forFilter ?? false;
@@ -55,8 +81,8 @@ export async function getCategories(opts?: {
     SELECT c.id, c.nom, c.slug, c.ordre,
            COUNT(DISTINCT a.libelle) AS article_count
     FROM categories c
-    LEFT JOIN catalogue_articles a
-      ON a.categorie_id = c.id AND a.actif = 1
+    LEFT JOIN ${table} a
+      ON a.categorie_id = c.id AND ${activeArticleSql("a", hasActif)}
     WHERE c.actif = 1
     ${clean ? `AND ${CLEAN_CATEGORY_SQL}` : ""}
     GROUP BY c.id, c.nom, c.slug, c.ordre
@@ -87,7 +113,8 @@ export async function getCatalogFilters() {
 }
 
 async function countDistinctProducts(opts?: { category?: string; variante?: string }) {
-  const conditions = ["a.actif = 1", "c.actif = 1", `(${CLEAN_CATEGORY_SQL})`];
+  const { table, hasActif } = await getArticlesMeta();
+  const conditions = [activeArticleSql("a", hasActif), "c.actif = 1", `(${CLEAN_CATEGORY_SQL})`];
   const params: string[] = [];
   if (opts?.category) {
     conditions.push("c.slug = ?");
@@ -100,7 +127,7 @@ async function countDistinctProducts(opts?: { category?: string; variante?: stri
   const [rows] = await pool.query<RowDataPacket[]>(
     `
     SELECT COUNT(DISTINCT CONCAT(a.categorie_id, '|', a.libelle)) AS n
-    FROM catalogue_articles a
+    FROM ${table} a
     INNER JOIN categories c ON c.id = a.categorie_id
     WHERE ${conditions.join(" AND ")}
     `,
@@ -110,11 +137,12 @@ async function countDistinctProducts(opts?: { category?: string; variante?: stri
 }
 
 async function getVariantes() {
+  const { table, hasActif } = await getArticlesMeta();
   const [rows] = await pool.query<VarianteRow[]>(`
     SELECT a.variante AS nom, COUNT(DISTINCT CONCAT(a.categorie_id, '|', a.libelle)) AS count
-    FROM catalogue_articles a
+    FROM ${table} a
     INNER JOIN categories c ON c.id = a.categorie_id
-    WHERE a.actif = 1 AND c.actif = 1
+    WHERE ${activeArticleSql("a", hasActif)} AND c.actif = 1
       AND ${CLEAN_CATEGORY_SQL}
       AND a.variante IS NOT NULL AND TRIM(a.variante) != ''
       AND LOWER(a.variante) NOT LIKE 'test%'
@@ -139,13 +167,14 @@ export async function getCatalogProducts(opts?: {
   sort?: "gamme" | "nom";
   limit?: number;
 }) {
+  const { table, hasActif } = await getArticlesMeta();
   const categorySlug = opts?.category ?? "";
   const q = opts?.q?.trim() ?? "";
   const variante = opts?.variante?.trim() ?? "";
   const sort = opts?.sort === "nom" ? "nom" : "gamme";
   const limit = Math.min(opts?.limit ?? 48, 200);
 
-  const conditions = ["a.actif = 1", "c.actif = 1", `(${CLEAN_CATEGORY_SQL})`];
+  const conditions = [activeArticleSql("a", hasActif), "c.actif = 1", `(${CLEAN_CATEGORY_SQL})`];
   const params: Array<string | number> = [];
 
   if (categorySlug) {
@@ -168,7 +197,9 @@ export async function getCatalogProducts(opts?: {
   const orderBy =
     sort === "nom"
       ? "a.libelle ASC, c.ordre ASC"
-      : "c.ordre ASC, MIN(a.ordre) ASC, a.libelle ASC";
+      : hasActif
+        ? "c.ordre ASC, MIN(a.ordre) ASC, a.libelle ASC"
+        : "c.ordre ASC, MIN(a.id) ASC, a.libelle ASC";
 
   const [rows] = await pool.query<ProductRow[]>(
     `
@@ -180,7 +211,7 @@ export async function getCatalogProducts(opts?: {
            MIN(a.photo) AS photo,
            GROUP_CONCAT(DISTINCT a.variante ORDER BY a.variante SEPARATOR '|') AS variantes_raw,
            COUNT(DISTINCT a.variante) AS variant_count
-    FROM catalogue_articles a
+    FROM ${table} a
     INNER JOIN categories c ON c.id = a.categorie_id
     WHERE ${conditions.join(" AND ")}
     GROUP BY a.libelle, a.categorie_id, c.nom, c.slug, c.ordre
@@ -202,12 +233,11 @@ export async function getCatalogProducts(opts?: {
   }));
 }
 
-/** @deprecated alias — regroupe par libellé */
 export async function getArticles(opts?: Parameters<typeof getCatalogProducts>[0]) {
   return getCatalogProducts(opts);
 }
 
 export async function checkDb() {
   await pool.query("SELECT 1");
-  return process.env.DB_NAME ?? "sorel_local";
+  return process.env.DB_NAME ?? process.env.DB_DATABASE ?? "sorel_local";
 }

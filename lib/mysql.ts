@@ -1,21 +1,23 @@
 import mysql from "mysql2/promise";
 import { ensureDatabaseUrl } from "./database-url.js";
+import { getMysql2Ssl, mysqlEnv } from "./mysql-ssl.js";
 
 export async function withMysql<T>(
   fn: (conn: mysql.Connection) => Promise<T>,
 ): Promise<T> {
   ensureDatabaseUrl();
-  const url = process.env.DATABASE_URL?.trim();
-  if (!url) {
-    throw new Error(
-      "Variables DB manquantes sur Vercel (DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD).",
-    );
-  }
 
-  const conn = await mysql.createConnection({
-    uri: url,
-    connectTimeout: 10_000,
-  });
+  const conn = process.env.DATABASE_URL?.trim()
+    ? await mysql.createConnection({
+        uri: process.env.DATABASE_URL,
+        connectTimeout: 10_000,
+        ssl: getMysql2Ssl(),
+      })
+    : await mysql.createConnection({
+        ...mysqlEnv(),
+        connectTimeout: 10_000,
+        ssl: getMysql2Ssl(),
+      });
 
   try {
     return await fn(conn);

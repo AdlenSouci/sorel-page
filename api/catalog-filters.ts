@@ -2,7 +2,7 @@ import "dotenv/config";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { buildDbSnapshot, toApiError } from "../lib/api-error.js";
 import { ensureDatabaseUrl } from "../lib/database-url.js";
-import { getCategories } from "../server/catalog-queries.js";
+import { getCatalogFilters } from "../server/catalog-queries.js";
 
 ensureDatabaseUrl();
 
@@ -23,17 +23,11 @@ export default async function handler(
   }
 
   try {
-    const limit = Number(req.query.limit) || 0;
-    const featured = req.query.featured === "1";
-    const rows = await getCategories({
-      limit: limit || undefined,
-      featured: featured || undefined,
-    });
-    res.status(200).json(rows);
+    res.status(200).json(await getCatalogFilters());
   } catch (e) {
     console.error(e);
     res.status(500).json({
-      error: "Impossible de charger les catégories.",
+      error: "Impossible de charger les filtres.",
       details: toApiError(e),
       db: buildDbSnapshot(),
     });

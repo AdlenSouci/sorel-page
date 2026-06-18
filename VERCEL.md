@@ -1,49 +1,46 @@
-# sorel-page — déploiement GitHub → Vercel uniquement
+# sorel-page — déploiement GitHub → Vercel
 
-Ce dépôt **sorel_page** : vous poussez sur **GitHub**, Vercel déploie tout seul.  
-Rien à envoyer à la main sur Vercel.
+## Variables Vercel (Settings → Environment Variables)
 
-## Ce qui part avec GitHub (automatique)
+Pour **Aiven MySQL** :
 
-- Le site React → https://sorel-page.vercel.app
-- Les routes API dans le dossier `api/` :
-  - `/api/categories`
-  - `/api/categories/:slug/items`
-  - `/api/featured`
+| Variable | Exemple |
+|----------|---------|
+| `DB_HOST` | `mysql-xxxxx.j.aivencloud.com` |
+| `DB_PORT` | `19534` |
+| `DB_DATABASE` | `defaultdb` |
+| `DB_USERNAME` | `avnadmin` |
+| `DB_PASSWORD` | *(mot de passe Aiven)* |
+| `DB_SSL` | `1` |
 
-Le front appelle **`/api/...` sur le même domaine** (sorel-page.vercel.app), pas sorel-order.fr.
+Optionnel : `VITE_MEDIA_BASE_URL` = `https://sorel-order.fr`
 
-## Ce que vous configurez sur vercel.com (une fois)
+**Ne pas** définir `VITE_CATALOG_API_URL` pour le déploiement standard.
 
-Projet lié à GitHub → **Settings → Environment Variables** :
+Après changement → **Redeploy**.
 
-| Variable | Valeur |
-|----------|--------|
-| `DB_HOST` | Hôte MySQL **distant** (cPanel o2switch, pas `127.0.0.1`) |
-| `DB_PORT` | `3306` |
-| `DB_DATABASE` | `kera6497_sorel-plastique` |
-| `DB_USERNAME` | `kera6497_sorel` |
-| `DB_PASSWORD` | votre mot de passe |
+## Import des données sur Aiven (une fois)
 
-**Ne pas** définir `VITE_CATALOG_API_URL` (réservé à un autre scénario, pas GitHub→Vercel).
+```bash
+# 1. Générer le SQL catalogue (depuis le dump fixé)
+node scripts/build-cloud-sql-from-dump.mjs
 
-Optionnel : `VITE_MEDIA_BASE_URL` = `https://sorel-order.fr` si les photos en base sont des chemins `/storage/...`
+# 2. Importer (avec vos identifiants Aiven en variables d'env)
+set DB_HOST=mysql-xxxxx.j.aivencloud.com
+set DB_PORT=19534
+set DB_USERNAME=avnadmin
+set DB_PASSWORD=votre_mot_de_passe
+set DB_DATABASE=defaultdb
+node scripts/import-aiven.mjs
+```
 
-Chaque **push sur GitHub** = nouveau déploiement. Après changement de variables, cliquer **Redeploy**.
+Le certificat CA Aiven peut être placé dans `certs/aiven-ca.pem` (gitignoré).
 
 ## Test
 
-https://sorel-page.vercel.app/api/categories → JSON
+- `https://votre-site.vercel.app/api/categories` → JSON
+- `/catalogue` et l'accueil
 
-Puis `/catalogue` et l’accueil.
+## Local
 
-## Si /api/categories renvoie encore une erreur
-
-o2switch bloque souvent MySQL depuis l’extérieur. Dans cPanel : activer **accès distant MySQL** et utiliser l’hôte indiqué (ex. `kera6497.odns.fr`), pas `sorel-order.fr`.
-
-## Le fichier `hosting/sorel-catalog-api.php`
-
-Ce n’est **pas** pour Vercel ni pour GitHub→Vercel.  
-C’est pour le **serveur sorel-order.fr** (autre hébergement), seulement si la connexion MySQL depuis Vercel est impossible.
-
-Pour sorel-page, tout doit passer par **Git push + variables Vercel**.
+`.env` avec `DB_HOST=localhost` … ou pointer vers Aiven pour tester la prod.

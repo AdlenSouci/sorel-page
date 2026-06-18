@@ -26,4 +26,6 @@ dist-ssr
 /src/generated/prisma
 
 .env
+.env.aiven
+certs/
 dev.db*
