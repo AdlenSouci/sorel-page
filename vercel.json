@@ -2,7 +2,21 @@
   "buildCommand": "prisma generate && npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/catalog-filters",
+      "destination": "/api/categories?view=filters"
+    },
+    {
+      "source": "/api/products",
+      "destination": "/api/categories?view=products"
+    },
+    {
+      "source": "/api/categories/:slug/items",
+      "destination": "/api/categories?slug=:slug&view=items"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
   ]
 }

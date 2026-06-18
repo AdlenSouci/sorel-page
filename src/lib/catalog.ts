@@ -7,8 +7,34 @@ import type {
 
 async function fetchJson<T>(path: string): Promise<T> {
   const res = await fetch(path);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json() as Promise<T>;
+  const text = await res.text();
+  const trimmed = text.trimStart();
+
+  if (trimmed.startsWith("<") || trimmed.startsWith("<!")) {
+    throw new Error(
+      "L’API catalogue a renvoyé du HTML au lieu de JSON. Redéployez le site sur Vercel.",
+    );
+  }
+
+  let data: unknown;
+  try {
+    data = JSON.parse(text) as unknown;
+  } catch {
+    throw new Error("Réponse invalide (pas du JSON).");
+  }
+
+  if (!res.ok) {
+    const message =
+      typeof data === "object" &&
+      data !== null &&
+      "error" in data &&
+      typeof (data as { error: unknown }).error === "string"
+        ? (data as { error: string }).error
+        : `HTTP ${res.status}`;
+    throw new Error(message);
+  }
+
+  return data as T;
 }
 
 export function fetchCategories(opts?: {
@@ -23,7 +49,7 @@ export function fetchCategories(opts?: {
 }
 
 export function fetchCatalogFilters(): Promise<CatalogFiltersDTO> {
-  return fetchJson("/api/catalog-filters");
+  return fetchJson("/api/categories?view=filters");
 }
 
 export function fetchCatalogProducts(params?: {
@@ -33,12 +59,11 @@ export function fetchCatalogProducts(params?: {
   sort?: ArticleSort;
   limit?: number;
 }): Promise<CatalogProductDTO[]> {
-  const sp = new URLSearchParams();
+  const sp = new URLSearchParams({ view: "products" });
   if (params?.category) sp.set("category", params.category);
   if (params?.q) sp.set("q", params.q);
   if (params?.variante) sp.set("variante", params.variante);
   if (params?.sort) sp.set("sort", params.sort);
   if (params?.limit) sp.set("limit", String(params.limit));
-  const qs = sp.toString();
-  return fetchJson<CatalogProductDTO[]>(`/api/products${qs ? `?${qs}` : ""}`);
+  return fetchJson<CatalogProductDTO[]>(`/api/categories?${sp}`);
 }

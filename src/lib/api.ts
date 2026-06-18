@@ -31,7 +31,11 @@ function categoriesUrl(): string {
 function itemsUrl(slug: string): string {
   const base = catalogApiBase();
   if (!base) {
-    return `/api/categories/${encodeURIComponent(slug)}/items`;
+    const sp = new URLSearchParams({
+      view: "items",
+      slug,
+    });
+    return `/api/categories?${sp}`;
   }
   return isSinglePhpEndpoint(base)
     ? `${base}?action=items&slug=${encodeURIComponent(slug)}`
@@ -62,7 +66,7 @@ async function parseJson<T>(res: Response): Promise<T> {
 
   if (trimmed.startsWith("<") || trimmed.startsWith("<!")) {
     throw new Error(
-      "L’API catalogue a renvoyé du HTML au lieu de JSON. Vérifiez que les routes /api/* fonctionnent sur Vercel (et supprimez VITE_CATALOG_API_URL des variables d’environnement).",
+      "L’API catalogue a renvoyé du HTML au lieu de JSON. Redéployez le site sur Vercel.",
     );
   }
 

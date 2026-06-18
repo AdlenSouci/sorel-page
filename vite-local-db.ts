@@ -5,6 +5,7 @@ import {
   getCatalogFilters,
   getCatalogProducts,
   getCategories,
+  getCategoryCatalog,
 } from "./server/catalog-queries.js";
 
 function sendJson(res: ServerResponse, status: number, body: unknown) {
@@ -37,6 +38,44 @@ async function handleLocalDb(
     }
 
     if (pathname === "/api/categories") {
+      const view = searchParams.get("view") ?? "";
+
+      if (view === "filters") {
+        sendJson(res, 200, await getCatalogFilters());
+        return;
+      }
+
+      if (view === "products") {
+        sendJson(
+          res,
+          200,
+          await getCatalogProducts({
+            category: searchParams.get("category") ?? undefined,
+            q: searchParams.get("q") ?? undefined,
+            variante: searchParams.get("variante") ?? undefined,
+            sort:
+              searchParams.get("sort") === "nom" ? "nom" : "gamme",
+            limit: Number(searchParams.get("limit") || 48),
+          }),
+        );
+        return;
+      }
+
+      if (view === "items") {
+        const slug = searchParams.get("slug") ?? "";
+        if (!slug) {
+          sendJson(res, 400, { error: "Slug manquant." });
+          return;
+        }
+        const data = await getCategoryCatalog(slug);
+        if (!data) {
+          sendJson(res, 404, { error: "Catégorie introuvable." });
+          return;
+        }
+        sendJson(res, 200, data);
+        return;
+      }
+
       const limit = Number(searchParams.get("limit") || 0);
       const featured = searchParams.get("featured") === "1";
       const rows = await getCategories({ limit: limit || undefined, featured });
