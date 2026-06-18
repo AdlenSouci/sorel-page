@@ -106,7 +106,7 @@ export function Home() {
               >
                 <div className="mb-4 overflow-hidden rounded-2xl bg-white shadow-md transition-all group-hover:scale-[1.03] group-hover:shadow-xl">
                   <img
-                    src="/product-placeholder.svg"
+                    src="/product-default.png"
                     alt={gamme.nom}
                     className="aspect-[4/3] w-full bg-slate-100 object-cover"
                     loading="lazy"

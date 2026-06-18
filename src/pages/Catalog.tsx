@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { fetchCategories } from "../lib/catalog";
 import type { CategoryDTO } from "../types/catalog";
 
-const PLACEHOLDER = "/product-placeholder.svg";
+const PLACEHOLDER = "/product-default.png";
 
 export function Catalog() {
   const [categories, setCategories] = useState<CategoryDTO[] | null>(null);

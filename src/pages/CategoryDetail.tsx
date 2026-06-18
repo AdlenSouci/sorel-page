@@ -5,7 +5,7 @@ import { fetchCategoryCatalog, itemTitle, resolvePhotoUrl } from "../lib/api";
 import { getVarianteColor, swatchNeedsBorder } from "../lib/colorMap";
 import type { CatalogueItemDTO, CategoryCatalogDTO } from "../types/category";
 
-const PLACEHOLDER = "/product-placeholder.svg";
+const PLACEHOLDER = "/product-default.png";
 
 type Sort = "defaut" | "nom" | "couleur";
 
