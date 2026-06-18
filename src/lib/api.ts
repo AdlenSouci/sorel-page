@@ -4,49 +4,9 @@ import type {
   CategoryDTO,
 } from "../types/category";
 
-const useStaticCatalog = import.meta.env.PROD;
-
-async function parseJson<T>(res: Response): Promise<T> {
-  const text = await res.text();
-  const trimmed = text.trimStart();
-
-  if (trimmed.startsWith("<") || trimmed.startsWith("<!")) {
-    throw new Error(
-      "Données catalogue introuvables. Attendez la fin du déploiement Vercel ou videz le cache du navigateur.",
-    );
-  }
-
-  let data: unknown;
-  try {
-    data = JSON.parse(text) as unknown;
-  } catch {
-    throw new Error("Réponse invalide (pas du JSON).");
-  }
-
-  if (!res.ok) {
-    const message =
-      typeof data === "object" &&
-      data !== null &&
-      "error" in data &&
-      typeof (data as { error: unknown }).error === "string"
-        ? (data as { error: string }).error
-        : `Erreur ${res.status}`;
-    throw new Error(message);
-  }
-
-  return data as T;
-}
-
-function staticCategoryUrl(slug: string): string {
-  return `/catalog/${encodeURIComponent(slug)}.json`;
-}
-
-function categoriesUrl(): string {
-  return useStaticCatalog ? "/catalog/categories.json" : "/api/categories";
-}
-
-function itemsUrl(slug: string): string {
-  return useStaticCatalog ? staticCategoryUrl(slug) : `/api/items?slug=${encodeURIComponent(slug)}`;
+function categoryItemsUrl(slug: string): string {
+  const sp = new URLSearchParams({ view: "items", slug });
+  return `/api/categories?${sp}`;
 }
 
 function featuredUrl(limit: number): string {
@@ -63,15 +23,44 @@ export function resolvePhotoUrl(photo: string | null): string | null {
   return p.startsWith("/") ? p : `/${p}`;
 }
 
+async function parseJson<T>(res: Response): Promise<T> {
+  const text = await res.text();
+  const trimmed = text.trimStart();
+
+  if (trimmed.startsWith("<") || trimmed.startsWith("<!")) {
+    throw new Error("Impossible de charger les articles (réponse invalide du serveur).");
+  }
+
+  let data: unknown;
+  try {
+    data = JSON.parse(text) as unknown;
+  } catch {
+    throw new Error("Réponse invalide du serveur.");
+  }
+
+  if (!res.ok) {
+    const message =
+      typeof data === "object" &&
+      data !== null &&
+      "error" in data &&
+      typeof (data as { error: unknown }).error === "string"
+        ? (data as { error: string }).error
+        : `Erreur ${res.status}`;
+    throw new Error(message);
+  }
+
+  return data as T;
+}
+
 export async function fetchCategories(): Promise<CategoryDTO[]> {
-  const res = await fetch(categoriesUrl());
+  const res = await fetch("/api/categories");
   return parseJson<CategoryDTO[]>(res);
 }
 
 export async function fetchCategoryCatalog(
   slug: string,
 ): Promise<CategoryCatalogDTO> {
-  const res = await fetch(itemsUrl(slug));
+  const res = await fetch(categoryItemsUrl(slug));
   return parseJson<CategoryCatalogDTO>(res);
 }
 

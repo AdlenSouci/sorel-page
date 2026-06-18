@@ -10,7 +10,6 @@
     "dev:web": "vite",
     "dev:api": "tsx watch server/index.ts",
     "build": "tsc -b && vite build",
-    "vercel-build": "prisma generate && tsx scripts/generate-catalog-static.ts && npm run build",
     "lint": "eslint .",
     "preview": "vite preview",
     "db:push": "prisma db push",
