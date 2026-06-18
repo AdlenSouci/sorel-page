@@ -1,11 +1,23 @@
-import { ArrowRight, Image as ImageIcon } from "lucide-react";
+import { ArrowRight, Image as ImageIcon, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import sorelLogo from "../assets/Sorel_logo_noi.svg";
+import { fetchCategories } from "../lib/catalog";
+import type { CategoryDTO } from "../types/catalog";
 
-const GAMME_PLACEHOLDER_COUNT = 4;
+const FEATURED_GAMMES = 5;
 
 export function Home() {
+  const [gammes, setGammes] = useState<CategoryDTO[] | null>(null);
+  const [gammesError, setGammesError] = useState(false);
+
+  useEffect(() => {
+    void fetchCategories({ limit: FEATURED_GAMMES, featured: true })
+      .then(setGammes)
+      .catch(() => setGammesError(true));
+  }, []);
+
   return (
     <div>
       <section className="relative flex min-h-[88vh] flex-col items-center justify-center overflow-hidden px-6 pt-2 pb-16 md:px-16">
@@ -33,7 +45,7 @@ export function Home() {
             </p>
             <p className="mx-auto max-w-2xl text-[17px] leading-[1.65] text-slate-800">
               Plastiques techniques, gammes Color Tonic et solutions sur mesure pour
-              l’industrie, le bâtiment et l’aménagement intérieur.
+              l&apos;industrie, le bâtiment et l&apos;aménagement intérieur.
             </p>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
               <Link
@@ -66,35 +78,58 @@ export function Home() {
             Nos gammes phares
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-slate-800">
-            Color Tonic et finitions — catalogue mis à jour depuis notre base (à
-            brancher).
+            {gammes?.length
+              ? `${gammes.length} gammes phares.`
+              : "Chargement des gammes…"}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: GAMME_PLACEHOLDER_COUNT }, (_, index) => (
-            <Link
-              key={index}
-              to="/catalogue"
-              className="group block cursor-pointer"
-            >
-              <div className="mb-4 overflow-hidden rounded-2xl bg-white shadow-md transition-all group-hover:scale-105 group-hover:shadow-xl">
-                <div
-                  className="flex aspect-[4/3] w-full items-center justify-center bg-slate-100 text-slate-400"
-                  aria-hidden
-                >
-                  <ImageIcon className="size-12 opacity-60" strokeWidth={1.5} />
+        {gammesError ? (
+          <p className="mb-8 text-center text-sm text-red-700">
+            Base locale inaccessible — vérifiez MySQL et le fichier{" "}
+            <code className="rounded bg-red-100 px-1.5">.env</code>.
+          </p>
+        ) : null}
+
+        {!gammes && !gammesError ? (
+          <div className="flex justify-center py-12 text-slate-600">
+            <Loader2 className="size-8 animate-spin" aria-hidden />
+          </div>
+        ) : null}
+
+        {gammes && gammes.length > 0 ? (
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-5">
+            {gammes.map((gamme) => (
+              <Link
+                key={gamme.id}
+                to={`/catalogue?category=${encodeURIComponent(gamme.slug)}`}
+                className="group block"
+              >
+                <div className="mb-4 overflow-hidden rounded-2xl bg-white shadow-md transition-all group-hover:scale-[1.03] group-hover:shadow-xl">
+                  <div className="flex aspect-[4/3] items-center justify-center bg-slate-100 text-slate-400">
+                    <ImageIcon className="size-10 opacity-55" strokeWidth={1.5} />
+                  </div>
                 </div>
-              </div>
-              <p className="text-center font-semibold text-slate-950">
-                Color Tonic
-              </p>
-              <p className="mt-1 text-center text-sm leading-snug text-slate-700">
-                Visuel à venir — fiche au catalogue
-              </p>
+                <p className="text-center font-semibold text-slate-950">{gamme.nom}</p>
+                <p className="mt-1 text-center text-sm text-slate-600">
+                  {gamme.articleCount} article{gamme.articleCount > 1 ? "s" : ""}
+                </p>
+              </Link>
+            ))}
+          </div>
+        ) : null}
+
+        {gammes && gammes.length > 0 ? (
+          <div className="mt-12 text-center">
+            <Link
+              to="/catalogue"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-[#27E4F5] underline-offset-4 hover:underline"
+            >
+              Voir tout le catalogue avec filtres
+              <ArrowRight className="size-4" aria-hidden />
             </Link>
-          ))}
-        </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
