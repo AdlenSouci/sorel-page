@@ -3,6 +3,13 @@ import type {
   CategoryCatalogDTO,
   CategoryDTO,
 } from "../types/category";
+import {
+  BUILD_ID,
+  catalogCategories,
+  categoryCatalogs,
+} from "../generated/catalog-data";
+
+export { BUILD_ID };
 
 function categoryItemsUrl(slug: string): string {
   const sp = new URLSearchParams({ view: "items", slug });
@@ -28,7 +35,7 @@ async function parseJson<T>(res: Response): Promise<T> {
   const trimmed = text.trimStart();
 
   if (trimmed.startsWith("<") || trimmed.startsWith("<!")) {
-    throw new Error("Impossible de charger les articles (réponse invalide du serveur).");
+    throw new Error("Impossible de charger les articles.");
   }
 
   let data: unknown;
@@ -53,6 +60,9 @@ async function parseJson<T>(res: Response): Promise<T> {
 }
 
 export async function fetchCategories(): Promise<CategoryDTO[]> {
+  if (import.meta.env.PROD && catalogCategories.length > 0) {
+    return catalogCategories;
+  }
   const res = await fetch("/api/categories");
   return parseJson<CategoryDTO[]>(res);
 }
@@ -60,6 +70,11 @@ export async function fetchCategories(): Promise<CategoryDTO[]> {
 export async function fetchCategoryCatalog(
   slug: string,
 ): Promise<CategoryCatalogDTO> {
+  if (import.meta.env.PROD) {
+    const data = categoryCatalogs[slug];
+    if (!data) throw new Error("Catégorie introuvable.");
+    return data;
+  }
   const res = await fetch(categoryItemsUrl(slug));
   return parseJson<CategoryCatalogDTO>(res);
 }

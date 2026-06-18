@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import sorelLogo from "../assets/Sorel_logo_noi.svg";
+import { BUILD_ID } from "../lib/api";
 
 export function Footer() {
   return (
@@ -135,6 +136,7 @@ export function Footer() {
         <div className="container mx-auto px-6 py-4 md:px-16">
           <p className="text-center text-xs text-zinc-500">
             © {new Date().getFullYear()} Sorel Plastiques — Tous droits réservés.
+            <span className="ml-2 text-zinc-600">v{BUILD_ID}</span>
           </p>
         </div>
       </div>
