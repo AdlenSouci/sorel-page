@@ -1,5 +1,5 @@
 # sorel_page — catalogue vitrine
-
+test12123
 Site React (Vercel) + API PHP sur o2switch (MySQL `categories` / `catalogue`).
 
 ## Production (Vercel)
