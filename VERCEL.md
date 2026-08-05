@@ -21,20 +21,24 @@ Après changement → **Redeploy**.
 
 ## Import des données sur Aiven (une fois)
 
-```bash
-# 1. Générer le SQL catalogue (depuis le dump fixé)
-node scripts/build-cloud-sql-from-dump.mjs
+Le site lit la table **`article`** (pas `categories` / `catalogue`).
 
-# 2. Importer (avec vos identifiants Aiven en variables d'env)
-set DB_HOST=mysql-xxxxx.j.aivencloud.com
-set DB_PORT=19534
-set DB_USERNAME=avnadmin
-set DB_PASSWORD=votre_mot_de_passe
-set DB_DATABASE=defaultdb
+```powershell
+# 1. Exporter depuis MySQL local (catalogue_sorel)
+node scripts/export-article-cloud.mjs
+
+# 2. Importer vers Aiven
+$env:DB_HOST="mysql-xxxxx.i.aivencloud.com"
+$env:DB_PORT="19534"
+$env:DB_USERNAME="avnadmin"
+$env:DB_PASSWORD="votre_mot_de_passe"
+$env:DB_DATABASE="defaultdb"
 node scripts/import-aiven.mjs
 ```
 
-Le certificat CA Aiven peut être placé dans `certs/aiven-ca.pem` (gitignoré).
+Après import → **Redeploy** sur Vercel (Deployments → ⋮ → Redeploy).
+
+Le certificat CA Aiven peut être placé dans `certs/aiven-ca.pem` (gitignoré) ou collé dans `DB_SSL_CA`.
 
 ## Test
 

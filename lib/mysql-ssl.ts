@@ -22,7 +22,9 @@ export function needsMysqlSsl(): boolean {
 export function getMysql2Ssl(): ConnectionOptions["ssl"] {
   const ca = readSslCa();
   if (ca) return { ca, rejectUnauthorized: true };
-  if (needsMysqlSsl()) return { rejectUnauthorized: true };
+  // Aiven / cloud MySQL : sans CA fourni, on active TLS sans vérifier la chaîne
+  // (équivalent Prisma sslaccept=accept_invalid_certs).
+  if (needsMysqlSsl()) return { rejectUnauthorized: false };
   return undefined;
 }
 

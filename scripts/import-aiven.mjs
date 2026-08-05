@@ -1,18 +1,27 @@
 /**
- * Importe scripts/out/sorel-catalog-cloud.sql vers MySQL distant (Aiven).
+ * Importe scripts/out/sorel-article-cloud.sql vers MySQL distant (Aiven).
  *
- * Variables : DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, DB_DATABASE
- * Optionnel : DB_SSL_CA (contenu PEM) ou DB_SSL=1
+ * Variables : DB_HOST, DB_PORT, DB_USERNAME (ou DB_USER), DB_PASSWORD, DB_DATABASE (ou DB_NAME)
+ * Optionnel : DB_SSL_CA (contenu PEM) ou laisser vide (TLS sans vérif CA)
+ *
+ * Usage :
+ *   # PowerShell
+ *   $env:DB_HOST="mysql-xxxxx.i.aivencloud.com"
+ *   $env:DB_PORT="19534"
+ *   $env:DB_USERNAME="avnadmin"
+ *   $env:DB_PASSWORD="..."
+ *   $env:DB_DATABASE="defaultdb"
+ *   node scripts/import-aiven.mjs
  */
 import fs from "node:fs";
 import path from "node:path";
 import mysql from "mysql2/promise";
 
-const SQL_FILE = path.join("scripts", "out", "sorel-catalog-cloud.sql");
+const SQL_FILE = path.join("scripts", "out", "sorel-article-cloud.sql");
 
 if (!fs.existsSync(SQL_FILE)) {
   console.error("Fichier manquant :", SQL_FILE);
-  console.error("Lancez d'abord : node scripts/export-catalog-only.mjs");
+  console.error("Lancez d'abord : node scripts/export-article-cloud.mjs");
   process.exit(1);
 }
 
@@ -33,8 +42,8 @@ if (!ca && fs.existsSync(caFile)) {
 }
 const ssl = ca
   ? { ca, rejectUnauthorized: true }
-  : host.includes("aivencloud.com")
-    ? { rejectUnauthorized: true }
+  : host.includes("aivencloud.com") || process.env.DB_SSL === "1"
+    ? { rejectUnauthorized: false }
     : undefined;
 
 const conn = await mysql.createConnection({
@@ -51,8 +60,10 @@ console.log("Connexion OK →", host);
 const sql = fs.readFileSync(SQL_FILE, "utf8");
 await conn.query(sql);
 
-const [[cats]] = await conn.query("SELECT COUNT(*) AS n FROM categories");
-const [[arts]] = await conn.query("SELECT COUNT(*) AS n FROM catalogue");
-console.log(`Import OK : ${cats.n} catégories, ${arts.n} articles dans \`catalogue\``);
+const [[arts]] = await conn.query("SELECT COUNT(*) AS n FROM article");
+const [[gammes]] = await conn.query(
+  "SELECT COUNT(DISTINCT gamme) AS n FROM article WHERE gamme IS NOT NULL AND TRIM(gamme) != ''",
+);
+console.log(`Import OK : ${arts.n} articles, ${gammes.n} gammes dans \`article\``);
 
 await conn.end();
