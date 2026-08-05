@@ -7,6 +7,8 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, Check, Mail, Sparkles } from "lucide-react";
+import { useSeo } from "../hooks/useSeo";
+import { mailtoQuery, useWishlist } from "../lib/wishlist";
 
 const CONTACT_MAIL = "contact@sorel-plastiques.local";
 
@@ -136,20 +138,28 @@ export function Contact() {
   const [company, setCompany] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const wishlist = useWishlist();
+
+  useSeo({
+    title: "Contact",
+    description:
+      "Contactez Sorel Plastiques pour un devis, un catalogue personnalisé ou une question technique sur l'injection plastique.",
+  });
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const body = [
       `Nom : ${name}`,
       `Entreprise : ${company || "—"}`,
+      `E-mail : ${email}`,
       "",
       message,
     ].join("\n");
-    const q = new URLSearchParams({
+    const q = mailtoQuery({
       subject: subject || `Message de ${name || "site Sorel"}`,
       body,
     });
-    window.location.href = `mailto:${CONTACT_MAIL}?${q.toString()}`;
+    window.location.href = `mailto:${CONTACT_MAIL}?${q}`;
     setSent(true);
   };
 
@@ -241,6 +251,22 @@ export function Contact() {
                 Voir le catalogue
               </Link>
             </div>
+
+            {wishlist.length > 0 ? (
+              <div className="mt-8 rounded-2xl bg-white/60 p-4 ring-1 ring-[#27E4F5]/30 backdrop-blur-md">
+                <p className="text-sm text-slate-900">
+                  Vous avez {wishlist.length} référence
+                  {wishlist.length > 1 ? "s" : ""} dans votre liste.
+                </p>
+                <Link
+                  to="/mes-references"
+                  className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#27E4F5] underline-offset-4 hover:underline"
+                >
+                  Envoyer directement la demande de devis
+                  <ArrowUpRight className="size-4" aria-hidden />
+                </Link>
+              </div>
+            ) : null}
           </motion.header>
 
           <section className="lg:col-span-7">
@@ -299,6 +325,7 @@ export function Contact() {
                             <motion.input
                               id={id}
                               required
+                              autoComplete="name"
                               value={name}
                               onChange={(e) => setName(e.target.value)}
                               whileFocus={
@@ -321,6 +348,7 @@ export function Contact() {
                               id={id}
                               type="email"
                               required
+                              autoComplete="email"
                               value={email}
                               onChange={(e) => setEmail(e.target.value)}
                               whileFocus={
@@ -342,6 +370,7 @@ export function Contact() {
                         {(id) => (
                           <motion.input
                             id={id}
+                            autoComplete="organization"
                             value={company}
                             onChange={(e) => setCompany(e.target.value)}
                             whileFocus={

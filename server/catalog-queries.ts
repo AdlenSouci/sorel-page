@@ -2,22 +2,17 @@ import type { RowDataPacket } from "mysql2";
 import { pool } from "./db.js";
 
 type CategoryRow = RowDataPacket & {
-  id: number;
   nom: string;
   slug: string;
-  ordre: number;
   article_count: number;
 };
 
-type ProductRow = RowDataPacket & {
+type ArticleRow = RowDataPacket & {
   id: number;
-  libelle: string;
-  categorie_id: number;
-  category_nom: string;
-  category_slug: string;
+  reference: string | null;
+  gamme: string | null;
   photo: string | null;
-  variantes_raw: string | null;
-  variant_count: number;
+  couleur: string | null;
 };
 
 type VarianteRow = RowDataPacket & {
@@ -25,148 +20,82 @@ type VarianteRow = RowDataPacket & {
   count: number;
 };
 
-const CLEAN_CATEGORY_SQL = `
-  c.slug NOT LIKE 'categorie-%'
-  AND c.nom NOT REGEXP '^[0-9]+$'
-  AND c.nom NOT LIKE 'CATEGORIE-%'
-  AND LOWER(c.nom) NOT LIKE '%test%'
-  AND c.nom NOT IN ('2023864', 'COUV.')
-`;
-
-/** Gammes dans le filtre latéral — top N avec articles */
-const FILTER_GAMMES_LIMIT = 10;
-
-let articlesTableCache: string | null = null;
-let articlesHasActifCache: boolean | null = null;
-
-async function getArticlesMeta() {
-  if (articlesTableCache) {
-    return { table: articlesTableCache, hasActif: articlesHasActifCache! };
-  }
-
-  const [rows] = await pool.query<RowDataPacket[]>(
-  `SHOW TABLES LIKE 'catalogue_articles'`,
-  );
-  if (rows.length > 0) {
-    articlesTableCache = "catalogue_articles";
-    articlesHasActifCache = true;
-    return { table: articlesTableCache, hasActif: true };
-  }
-
-  articlesTableCache = "catalogue";
-  articlesHasActifCache = false;
-  return { table: articlesTableCache, hasActif: false };
-}
-
-function activeArticleSql(alias: string, hasActif: boolean) {
-  return hasActif ? `${alias}.actif = 1` : "1=1";
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 export async function getCategories(opts?: {
   limit?: number;
   featured?: boolean;
-  forFilter?: boolean;
 }) {
-  const { table, hasActif } = await getArticlesMeta();
-  const featured = opts?.featured ?? false;
-  const forFilter =
-    opts?.forFilter ?? (!opts?.limit && !featured);
   const limit = opts?.limit ? Math.min(opts.limit, 100) : 0;
-  const effectiveLimit = forFilter
-    ? FILTER_GAMMES_LIMIT
-    : limit > 0
-      ? limit
-      : 0;
-  const having = "HAVING article_count > 0";
-  const order = featured || forFilter
-    ? "ORDER BY article_count DESC, c.ordre ASC"
-    : "ORDER BY c.ordre ASC, c.nom ASC";
 
   const sql = `
-    SELECT c.id, c.nom, c.slug, c.ordre,
-           COUNT(DISTINCT a.libelle) AS article_count
-    FROM categories c
-    INNER JOIN ${table} a
-      ON a.categorie_id = c.id AND ${activeArticleSql("a", hasActif)}
-    WHERE c.actif = 1
-    AND ${CLEAN_CATEGORY_SQL}
-    GROUP BY c.id, c.nom, c.slug, c.ordre
-    ${having}
-    ${order}
-    ${effectiveLimit > 0 ? "LIMIT ?" : ""}
+    SELECT gamme AS nom, COUNT(*) AS article_count
+    FROM article
+    WHERE gamme IS NOT NULL AND TRIM(gamme) != ''
+    GROUP BY gamme
+    HAVING article_count > 0
+    ORDER BY article_count DESC, gamme ASC
+    ${limit > 0 ? "LIMIT ?" : ""}
   `;
   const [rows] = await pool.query<CategoryRow[]>(
     sql,
-    effectiveLimit > 0 ? [effectiveLimit] : [],
+    limit > 0 ? [limit] : [],
   );
-  return rows.map((r) => ({
-    id: r.id,
+  return rows.map((r, i) => ({
+    id: i + 1,
     nom: r.nom,
-    slug: r.slug,
-    ordre: r.ordre,
+    slug: slugify(r.nom),
+    ordre: i,
     articleCount: Number(r.article_count),
   }));
 }
 
 export async function getCatalogFilters() {
   const [categories, variantes, totalProducts] = await Promise.all([
-    getCategories({ forFilter: true }),
+    getCategories(),
     getVariantes(),
-    countDistinctProducts(),
+    countArticles(),
   ]);
   return { categories, variantes, totalProducts };
 }
 
-async function countDistinctProducts(opts?: { category?: string; variante?: string }) {
-  const { table, hasActif } = await getArticlesMeta();
-  const conditions = [
-    activeArticleSql("a", hasActif),
-    "c.actif = 1",
-    CLEAN_CATEGORY_SQL.trim(),
-  ];
+async function countArticles(opts?: { category?: string; variante?: string }) {
+  const conditions: string[] = ["1=1"];
   const params: string[] = [];
   if (opts?.category) {
-    conditions.push("c.slug = ?");
+    conditions.push("gamme = ?");
     params.push(opts.category);
   }
   if (opts?.variante) {
-    conditions.push("a.variante = ?");
+    conditions.push("couleur = ?");
     params.push(opts.variante);
   }
   const [rows] = await pool.query<RowDataPacket[]>(
-    `
-    SELECT COUNT(DISTINCT CONCAT(a.categorie_id, '|', a.libelle)) AS n
-    FROM ${table} a
-    INNER JOIN categories c ON c.id = a.categorie_id
-    WHERE ${conditions.join(" AND ")}
-    `,
+    `SELECT COUNT(*) AS n FROM article WHERE ${conditions.join(" AND ")}`,
     params,
   );
   return Number(rows[0]?.n ?? 0);
 }
 
 async function getVariantes() {
-  const { table, hasActif } = await getArticlesMeta();
   const [rows] = await pool.query<VarianteRow[]>(`
-    SELECT a.variante AS nom, COUNT(DISTINCT CONCAT(a.categorie_id, '|', a.libelle)) AS count
-    FROM ${table} a
-    INNER JOIN categories c ON c.id = a.categorie_id
-    WHERE ${activeArticleSql("a", hasActif)} AND c.actif = 1
-      AND ${CLEAN_CATEGORY_SQL}
-      AND a.variante IS NOT NULL AND TRIM(a.variante) != ''
-      AND LOWER(a.variante) NOT LIKE 'test%'
-    GROUP BY a.variante
+    SELECT couleur AS nom, COUNT(*) AS count
+    FROM article
+    WHERE couleur IS NOT NULL AND TRIM(couleur) != ''
+    GROUP BY couleur
     ORDER BY count DESC, nom ASC
   `);
   return rows.map((r) => ({
     nom: r.nom,
     count: Number(r.count),
   }));
-}
-
-function parseVariantes(raw: string | null): string[] {
-  if (!raw) return [];
-  return raw.split("|").filter(Boolean);
 }
 
 export async function getCatalogProducts(opts?: {
@@ -176,58 +105,37 @@ export async function getCatalogProducts(opts?: {
   sort?: "gamme" | "nom";
   limit?: number;
 }) {
-  const { table, hasActif } = await getArticlesMeta();
-  const categorySlug = opts?.category ?? "";
+  const categoryName = opts?.category ?? "";
   const q = opts?.q?.trim() ?? "";
   const variante = opts?.variante?.trim() ?? "";
   const sort = opts?.sort === "nom" ? "nom" : "gamme";
   const limit = Math.min(opts?.limit ?? 48, 200);
 
-  const conditions = [
-    activeArticleSql("a", hasActif),
-    "c.actif = 1",
-    CLEAN_CATEGORY_SQL.trim(),
-  ];
+  const conditions: string[] = ["gamme IS NOT NULL", "TRIM(gamme) != ''"];
   const params: Array<string | number> = [];
 
-  if (categorySlug) {
-    conditions.push("c.slug = ?");
-    params.push(categorySlug);
+  if (categoryName) {
+    conditions.push("gamme = ?");
+    params.push(categoryName);
   }
   if (q) {
-    conditions.push(
-      "(a.libelle LIKE ? OR a.code_article LIKE ? OR a.variante LIKE ?)",
-    );
+    conditions.push("(reference LIKE ? OR gamme LIKE ? OR couleur LIKE ?)");
     const like = `%${q}%`;
     params.push(like, like, like);
   }
   if (variante) {
-    conditions.push("a.variante = ?");
+    conditions.push("couleur = ?");
     params.push(variante);
   }
   params.push(limit);
 
-  const orderBy =
-    sort === "nom"
-      ? "a.libelle ASC, c.ordre ASC"
-      : hasActif
-        ? "c.ordre ASC, MIN(a.ordre) ASC, a.libelle ASC"
-        : "c.ordre ASC, MIN(a.id) ASC, a.libelle ASC";
+  const orderBy = sort === "nom" ? "reference ASC" : "gamme ASC, reference ASC";
 
-  const [rows] = await pool.query<ProductRow[]>(
+  const [rows] = await pool.query<ArticleRow[]>(
     `
-    SELECT MIN(a.id) AS id,
-           a.libelle,
-           a.categorie_id,
-           c.nom AS category_nom,
-           c.slug AS category_slug,
-           MIN(a.photo) AS photo,
-           GROUP_CONCAT(DISTINCT a.variante ORDER BY a.variante SEPARATOR '|') AS variantes_raw,
-           COUNT(DISTINCT a.variante) AS variant_count
-    FROM ${table} a
-    INNER JOIN categories c ON c.id = a.categorie_id
+    SELECT id, reference, gamme, photo, couleur
+    FROM article
     WHERE ${conditions.join(" AND ")}
-    GROUP BY a.libelle, a.categorie_id, c.nom, c.slug, c.ordre
     ORDER BY ${orderBy}
     LIMIT ?
     `,
@@ -236,57 +144,60 @@ export async function getCatalogProducts(opts?: {
 
   return rows.map((r) => ({
     id: r.id,
-    libelle: r.libelle,
-    categorieId: r.categorie_id,
-    categoryNom: r.category_nom,
-    categorySlug: r.category_slug,
+    libelle: r.reference ?? "Article",
+    categorieId: 0,
+    categoryNom: r.gamme ?? "",
+    categorySlug: r.gamme ? slugify(r.gamme) : "",
     photo: r.photo,
-    variantes: parseVariantes(r.variantes_raw),
-    variantCount: Number(r.variant_count),
+    variantes: r.couleur ? [r.couleur] : [],
+    variantCount: r.couleur ? 1 : 0,
   }));
 }
 
-export async function getArticles(opts?: Parameters<typeof getCatalogProducts>[0]) {
+export async function getArticles(
+  opts?: Parameters<typeof getCatalogProducts>[0],
+) {
   return getCatalogProducts(opts);
 }
 
-type CategoryDetailRow = RowDataPacket & {
-  id: number;
-  nom: string;
-  slug: string;
-  ordre: number;
-};
+/** Quelques références mises en avant sur l'accueil. */
+export async function getFeaturedItems(limit = 4) {
+  const n = Math.max(1, Math.min(limit, 12));
+  const [rows] = await pool.query<ArticleRow[]>(
+    `
+    SELECT id, reference, gamme, photo, couleur
+    FROM article
+    WHERE gamme IS NOT NULL AND TRIM(gamme) != ''
+    ORDER BY id ASC
+    LIMIT ?
+    `,
+    [n],
+  );
 
-type CategoryItemRow = RowDataPacket & {
-  id: number;
-  code_article: string | null;
-  libelle: string;
-  variante: string | null;
-  photo: string | null;
-};
+  return rows.map((r) => ({
+    id: r.id,
+    codeArticle: r.reference?.trim() ?? null,
+    libelle: r.reference ?? "Article",
+    variante: r.couleur,
+    photo: r.photo,
+    categorySlug: r.gamme ? slugify(r.gamme) : "",
+    categoryNom: r.gamme ?? "",
+  }));
+}
 
 export async function getCategoryCatalog(slug: string) {
-  const { table, hasActif } = await getArticlesMeta();
-  const [catRows] = await pool.query<CategoryDetailRow[]>(
-    `
-    SELECT c.id, c.nom, c.slug, c.ordre
-    FROM categories c
-    WHERE c.slug = ? AND c.actif = 1 AND ${CLEAN_CATEGORY_SQL}
-    LIMIT 1
-    `,
-    [slug],
-  );
-  const category = catRows[0];
+  const categories = await getCategories();
+  const category = categories.find((c) => c.slug === slug);
   if (!category) return null;
 
-  const [items] = await pool.query<CategoryItemRow[]>(
+  const [items] = await pool.query<ArticleRow[]>(
     `
-    SELECT a.id, a.code_article, a.libelle, a.variante, a.photo
-    FROM ${table} a
-    WHERE a.categorie_id = ? AND ${activeArticleSql("a", hasActif)}
-    ORDER BY a.libelle ASC, a.variante ASC
+    SELECT id, reference, gamme, photo, couleur
+    FROM article
+    WHERE gamme = ?
+    ORDER BY reference ASC, couleur ASC
     `,
-    [category.id],
+    [category.nom],
   );
 
   return {
@@ -298,9 +209,9 @@ export async function getCategoryCatalog(slug: string) {
     },
     items: items.map((item) => ({
       id: item.id,
-      codeArticle: item.code_article?.trim() ?? null,
-      libelle: item.libelle,
-      variante: item.variante,
+      codeArticle: item.reference?.trim() ?? null,
+      libelle: item.reference ?? "Article",
+      variante: item.couleur,
       photo: item.photo,
       categorySlug: category.slug,
       categoryNom: category.nom,
@@ -310,5 +221,5 @@ export async function getCategoryCatalog(slug: string) {
 
 export async function checkDb() {
   await pool.query("SELECT 1");
-  return process.env.DB_NAME ?? process.env.DB_DATABASE ?? "sorel_local";
+  return process.env.DB_NAME ?? "catalogue_sorel";
 }

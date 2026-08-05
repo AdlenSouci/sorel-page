@@ -1,16 +1,24 @@
-﻿import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import sorelLogo from "../assets/Sorel_logo_noi.svg";
+import { useSeo } from "../hooks/useSeo";
 import { fetchCategories } from "../lib/catalog";
 import type { CategoryDTO } from "../types/catalog";
 
 const FEATURED_GAMMES = 5;
+const PLACEHOLDER = "/product-placeholder.svg";
 
 export function Home() {
   const [gammes, setGammes] = useState<CategoryDTO[] | null>(null);
   const [gammesError, setGammesError] = useState(false);
+
+  useSeo({
+    title: "Sorel Plastiques",
+    description:
+      "Injecteur de pièces techniques et spécialiste de l'emballage alimentaire depuis 1975. Plus de 200 modèles standards, coloration sur mesure, éco-conception.",
+  });
 
   useEffect(() => {
     void fetchCategories({ limit: FEATURED_GAMMES, featured: true })
@@ -93,6 +101,7 @@ export function Home() {
         {!gammes && !gammesError ? (
           <div className="flex justify-center py-12 text-slate-600">
             <Loader2 className="size-8 animate-spin" aria-hidden />
+            <span className="sr-only">Chargement des gammes…</span>
           </div>
         ) : null}
 
@@ -106,7 +115,7 @@ export function Home() {
               >
                 <div className="mb-4 overflow-hidden rounded-2xl bg-white shadow-md transition-all group-hover:scale-[1.03] group-hover:shadow-xl">
                   <img
-                    src="/product-default.png"
+                    src={PLACEHOLDER}
                     alt={gamme.nom}
                     className="aspect-[4/3] w-full bg-slate-100 object-cover"
                     loading="lazy"

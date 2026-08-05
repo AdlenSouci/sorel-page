@@ -1,11 +1,13 @@
-import { ArrowLeft, Loader2, Search, X } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Plus, Search, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useSeo } from "../hooks/useSeo";
 import { fetchCategoryCatalog, itemTitle, resolvePhotoUrl } from "../lib/api";
 import { getVarianteColor, swatchNeedsBorder } from "../lib/colorMap";
+import { isInWishlist, toggleWishlist, useWishlist } from "../lib/wishlist";
 import type { CatalogueItemDTO, CategoryCatalogDTO } from "../types/category";
 
-const PLACEHOLDER = "/product-default.png";
+const PLACEHOLDER = "/product-placeholder.svg";
 
 type Sort = "defaut" | "nom" | "couleur";
 
@@ -91,6 +93,13 @@ export function CategoryDetail() {
   }, [allItems, variante, q, sort]);
 
   const hasFilter = Boolean(variante || q.trim() || sort !== "defaut");
+
+  useSeo({
+    title: category?.nom ? `${category.nom} — Catalogue` : "Catalogue",
+    description: category?.nom
+      ? `${allItems.length} références ${category.nom} : coloris disponibles, conditionnements et dimensions. Catalogue Sorel Plastiques.`
+      : "Catalogue des références Sorel Plastiques.",
+  });
 
   return (
     <div className="px-6 py-14 md:px-16 md:py-20">
@@ -266,9 +275,20 @@ export function CategoryDetail() {
 function ArticleCard({ item }: { item: CatalogueItemDTO }) {
   const photo = resolvePhotoUrl(item.photo);
   const [src, setSrc] = useState(photo ?? PLACEHOLDER);
+  const wishlist = useWishlist();
+  const saved = isInWishlist(wishlist, item.id);
+
+  const onToggle = () =>
+    toggleWishlist({
+      id: item.id,
+      reference: item.codeArticle ?? item.libelle,
+      gamme: item.categoryNom,
+      couleur: item.variante,
+      photo: item.photo,
+    });
 
   return (
-    <li className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-900/5 transition hover:shadow-md">
+    <li className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-900/5 transition hover:shadow-md">
       <img
         src={src}
         alt={itemTitle(item)}
@@ -276,7 +296,7 @@ function ArticleCard({ item }: { item: CatalogueItemDTO }) {
         className="aspect-[4/3] w-full bg-slate-100 object-cover"
         loading="lazy"
       />
-      <div className="p-4">
+      <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start gap-2">
           {item.variante ? <ColorSwatch name={item.variante} /> : null}
           <h2 className="text-[15px] font-semibold leading-snug text-slate-950">
@@ -286,6 +306,30 @@ function ArticleCard({ item }: { item: CatalogueItemDTO }) {
         {item.codeArticle ? (
           <p className="mt-1 text-sm text-slate-500">Réf. {item.codeArticle}</p>
         ) : null}
+
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-pressed={saved}
+          className={[
+            "mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[13px] font-semibold transition",
+            saved
+              ? "bg-[#27E4F5]/15 text-slate-900 ring-1 ring-[#27E4F5]/50 hover:bg-[#27E4F5]/25"
+              : "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-sm hover:from-orange-600 hover:to-amber-600",
+          ].join(" ")}
+        >
+          {saved ? (
+            <>
+              <Check className="size-4" aria-hidden />
+              Dans ma liste
+            </>
+          ) : (
+            <>
+              <Plus className="size-4" aria-hidden />
+              Ajouter à ma liste
+            </>
+          )}
+        </button>
       </div>
     </li>
   );

@@ -35,6 +35,7 @@ export function Footer() {
                 whileHover={{ scale: 1.08, rotate: -2 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                loading="lazy"
               />
             </Link>
             <p className="mb-3 text-[18px] font-semibold text-white">
@@ -102,6 +103,7 @@ export function Footer() {
             </p>
             <div className="space-y-2.5">
               <NavButton to="/catalogue">Catalogue</NavButton>
+              <NavButton to="/mes-references">Ma liste de devis</NavButton>
               <NavButton to="/#produits">Nos références</NavButton>
               <NavButton to="/a-propos">Notre histoire</NavButton>
             </div>

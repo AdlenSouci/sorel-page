@@ -1,10 +1,11 @@
-﻿import "dotenv/config";
+import "dotenv/config";
 import express from "express";
 import {
   checkDb,
   getCatalogFilters,
   getCatalogProducts,
   getCategories,
+  getCategoryCatalog,
 } from "./catalog-queries.js";
 
 const app = express();
@@ -21,13 +22,49 @@ app.get("/api/health", async (_req, res) => {
 
 app.get("/api/categories", async (req, res) => {
   try {
-    res.json(await getCategories({
-      limit: Number(req.query.limit) || undefined,
-      featured: req.query.featured === "1",
-    }));
+    if (req.query.view === "items" && typeof req.query.slug === "string") {
+      const result = await getCategoryCatalog(req.query.slug);
+      if (!result) {
+        res.status(404).json({ error: "Categorie introuvable." });
+        return;
+      }
+      res.json(result);
+      return;
+    }
+
+    if (req.query.view === "filters") {
+      res.json(await getCatalogFilters());
+      return;
+    }
+
+    if (req.query.view === "products") {
+      res.json(
+        await getCatalogProducts({
+          category:
+            typeof req.query.category === "string"
+              ? req.query.category
+              : undefined,
+          q: typeof req.query.q === "string" ? req.query.q : undefined,
+          variante:
+            typeof req.query.variante === "string"
+              ? req.query.variante
+              : undefined,
+          sort: req.query.sort === "nom" ? "nom" : "gamme",
+          limit: Number(req.query.limit) || 48,
+        }),
+      );
+      return;
+    }
+
+    res.json(
+      await getCategories({
+        limit: Number(req.query.limit) || undefined,
+        featured: req.query.featured === "1",
+      }),
+    );
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: "Impossible de charger les cat├®gories." });
+    res.status(500).json({ error: "Impossible de charger les categories." });
   }
 });
 
@@ -45,10 +82,14 @@ app.get("/api/products", async (req, res) => {
     res.json(
       await getCatalogProducts({
         category:
-          typeof req.query.category === "string" ? req.query.category : undefined,
+          typeof req.query.category === "string"
+            ? req.query.category
+            : undefined,
         q: typeof req.query.q === "string" ? req.query.q : undefined,
         variante:
-          typeof req.query.variante === "string" ? req.query.variante : undefined,
+          typeof req.query.variante === "string"
+            ? req.query.variante
+            : undefined,
         sort: req.query.sort === "nom" ? "nom" : "gamme",
         limit: Number(req.query.limit) || 48,
       }),
@@ -64,10 +105,14 @@ app.get("/api/articles", async (req, res) => {
     res.json(
       await getCatalogProducts({
         category:
-          typeof req.query.category === "string" ? req.query.category : undefined,
+          typeof req.query.category === "string"
+            ? req.query.category
+            : undefined,
         q: typeof req.query.q === "string" ? req.query.q : undefined,
         variante:
-          typeof req.query.variante === "string" ? req.query.variante : undefined,
+          typeof req.query.variante === "string"
+            ? req.query.variante
+            : undefined,
         sort: req.query.sort === "nom" ? "nom" : "gamme",
         limit: Number(req.query.limit) || 48,
       }),
@@ -79,5 +124,5 @@ app.get("/api/articles", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`MySQL ${process.env.DB_NAME ?? "sorel_local"} ÔåÆ :${PORT}`);
+  console.log(`MySQL ${process.env.DB_NAME ?? "catalogue_sorel"} -> :${PORT}`);
 });

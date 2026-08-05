@@ -7,6 +7,7 @@ import {
   useScrollY,
   useSectionDistances,
 } from "../hooks/useScrollProximity";
+import { useSeo } from "../hooks/useSeo";
 import { TypewriterText } from "../components/TypewriterText";
 import machineImg from "../assets/machine.png";
 import agroalimentaireSvg from "../assets/agroalimentaire.svg";
@@ -17,6 +18,12 @@ export function About() {
   const rootRef = useRef<HTMLDivElement>(null);
   const scrollY = useScrollY();
   const distanceAt = useSectionDistances(rootRef, scrollY);
+
+  useSeo({
+    title: "À propos — injecteur plastique depuis 1975",
+    description:
+      "Sorel Plastiques : spécialiste de l'injection plastique et de l'emballage alimentaire depuis 1975. Plus de 300 clients en Europe, éco-conception et pièces techniques.",
+  });
 
   return (
     <div ref={rootRef}>
@@ -60,8 +67,8 @@ export function About() {
                       "transform 0.42s cubic-bezier(0.33, 0.91, 0.35, 1), opacity 0.42s ease-out",
                   }}
                 >
-                  <TypewriterText 
-                    text="La solution réelle pour vos projets en injection plastique" 
+                  <TypewriterText
+                    text="La solution réelle pour vos projets en injection plastique"
                     delay={500}
                     speed={40}
                   />
@@ -166,8 +173,10 @@ export function About() {
                   >
                     <img
                       src={machineImg}
-                      alt="Machine d'injection plastique Sorel"
+                      alt="Machine d'injection plastique dans l'atelier Sorel"
                       className="h-full w-full object-cover"
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
                   <div
@@ -179,7 +188,7 @@ export function About() {
                         "transform 0.45s cubic-bezier(0.33, 0.91, 0.35, 1), opacity 0.45s ease-out",
                     }}
                   >
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-orange-700">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#27E4F5]">
                       Agroalimentaire
                     </p>
                     <h2 className="mb-8 text-3xl font-bold tracking-tight text-slate-950 md:text-[40px]">

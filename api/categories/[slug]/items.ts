@@ -22,12 +22,9 @@ export default async function handler(
     return;
   }
 
-  const slug =
-    typeof req.query.slug === "string"
-      ? req.query.slug
-      : typeof (req as { query?: { slug?: string } }).query?.slug === "string"
-        ? (req as { query: { slug: string } }).query.slug
-        : "";
+  // Vercel passe le segment dynamique en string, ou en tableau si répété.
+  const raw = req.query.slug;
+  const slug = typeof raw === "string" ? raw : (raw?.[0] ?? "");
 
   if (!slug) {
     res.status(400).json({ error: "Slug manquant." });

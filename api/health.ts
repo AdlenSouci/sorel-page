@@ -1,8 +1,8 @@
 import "dotenv/config";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { buildDbSnapshot, toApiError } from "../lib/api-error.js";
+import { checkDb } from "../lib/catalog.js";
 import { ensureDatabaseUrl } from "../lib/database-url.js";
-import { prisma } from "../lib/db.js";
 
 ensureDatabaseUrl();
 
@@ -24,10 +24,11 @@ export default async function handler(
   }
 
   try {
-    await prisma.$queryRaw`SELECT 1`;
+    const database = await checkDb();
     res.status(200).json({
       ok: true,
       database: "connected",
+      name: database,
       db: buildDbSnapshot(),
     });
   } catch (error) {

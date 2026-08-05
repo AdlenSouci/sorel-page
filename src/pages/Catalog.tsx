@@ -1,14 +1,21 @@
-﻿import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useSeo } from "../hooks/useSeo";
 import { fetchCategories } from "../lib/catalog";
 import type { CategoryDTO } from "../types/catalog";
 
-const PLACEHOLDER = "/product-default.png";
+const PLACEHOLDER = "/product-placeholder.svg";
 
 export function Catalog() {
   const [categories, setCategories] = useState<CategoryDTO[] | null>(null);
   const [error, setError] = useState(false);
+
+  useSeo({
+    title: "Catalogue — gammes et références",
+    description:
+      "Parcourez les gammes Sorel Plastiques : moules ronds et rectangulaires, terrines, barquettes. Plus de 200 modèles standards, coloris au choix.",
+  });
 
   useEffect(() => {
     fetchCategories()
@@ -40,6 +47,7 @@ export function Catalog() {
         {!categories && !error ? (
           <div className="flex justify-center py-20 text-slate-500">
             <Loader2 className="size-8 animate-spin" aria-hidden />
+            <span className="sr-only">Chargement des catégories…</span>
           </div>
         ) : null}
 
