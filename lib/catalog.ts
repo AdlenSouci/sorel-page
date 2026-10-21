@@ -15,5 +15,6 @@ export {
   getCatalogProducts as listCatalogProducts,
   getFeaturedItems as listFeaturedProducts,
   getCategoryCatalog,
+  getArticle,
   checkDb,
 } from "../server/catalog-queries.js";

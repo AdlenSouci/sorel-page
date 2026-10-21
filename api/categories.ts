@@ -2,6 +2,7 @@ import "dotenv/config";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { buildDbSnapshot, toApiError } from "../lib/api-error.js";
 import {
+  getArticle,
   getCategoryCatalog,
   listCatalogFilters,
   listCatalogProducts,
@@ -52,6 +53,17 @@ export default async function handler(
           limit: Number(req.query.limit) || 48,
         }),
       );
+      return;
+    }
+
+    if (view === "article") {
+      const reference = typeof req.query.reference === "string" ? req.query.reference : "";
+      const data = reference ? await getArticle(reference) : null;
+      if (!data) {
+        res.status(404).json({ error: "Article introuvable." });
+        return;
+      }
+      res.status(200).json(data);
       return;
     }
 

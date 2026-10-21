@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { SketchDefs } from "../sketch/SketchDefs";
 import { Footer } from "./Footer";
 import { Navbar } from "./Navbar";
+import { PageBackdrop } from "./PageBackdrop";
 import { TupperwareBackdrop } from "./TupperwareBackdrop";
 
 /** Remet le scroll en haut à chaque navigation (le routeur ne le fait pas). */
@@ -23,7 +25,9 @@ export function Layout() {
       >
         Aller au contenu
       </a>
+      <SketchDefs />
       <TupperwareBackdrop />
+      <PageBackdrop />
       <main
         id="contenu"
         className="relative z-10 flex-1 pt-[5.5rem] sm:pt-[5.75rem]"

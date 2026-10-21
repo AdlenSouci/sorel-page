@@ -2,6 +2,7 @@ import type { Plugin } from "vite";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import {
   checkDb,
+  getArticle,
   getCatalogFilters,
   getCatalogProducts,
   getCategories,
@@ -87,6 +88,17 @@ async function handleLocalDb(
             limit: Number(searchParams.get("limit") || 48),
           }),
         );
+        return;
+      }
+
+      if (view === "article") {
+        const reference = searchParams.get("reference") ?? "";
+        const data = reference ? await getArticle(reference) : null;
+        if (!data) {
+          sendJson(res, 404, { error: "Article introuvable." });
+          return;
+        }
+        sendJson(res, 200, data);
         return;
       }
 

@@ -4,29 +4,12 @@ export type CategoryDTO = {
   slug: string;
   ordre: number;
   articleCount: number;
+  /** libellés les plus fréquents de la colonne description */
+  description?: string;
+  libelles?: string[];
+  /** contenance mini / maxi en ml (0 = inconnue) */
+  volumeMin?: number;
+  volumeMax?: number;
+  /** coloris disponibles dans la gamme */
+  couleurs?: string[];
 };
-
-export type VarianteFilterDTO = {
-  nom: string;
-  count: number;
-};
-
-export type CatalogFiltersDTO = {
-  categories: CategoryDTO[];
-  variantes: VarianteFilterDTO[];
-  totalProducts: number;
-};
-
-/** Un produit = un libellé dans une gamme, avec ses couleurs regroupées */
-export type CatalogProductDTO = {
-  id: number;
-  libelle: string;
-  categorieId: number;
-  categoryNom: string;
-  categorySlug: string;
-  photo: string | null;
-  variantes: string[];
-  variantCount: number;
-};
-
-export type ArticleSort = "gamme" | "nom";

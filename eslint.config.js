@@ -19,4 +19,9 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Composants shadcn : ils exportent aussi leurs variantes (buttonVariants…).
+    files: ['src/components/ui/**/*.tsx', 'src/components/icons.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
 ])

@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import {
   checkDb,
+  getArticle,
   getCatalogFilters,
   getCatalogProducts,
   getCategories,
@@ -26,6 +27,16 @@ app.get("/api/categories", async (req, res) => {
       const result = await getCategoryCatalog(req.query.slug);
       if (!result) {
         res.status(404).json({ error: "Categorie introuvable." });
+        return;
+      }
+      res.json(result);
+      return;
+    }
+
+    if (req.query.view === "article" && typeof req.query.reference === "string") {
+      const result = await getArticle(req.query.reference);
+      if (!result) {
+        res.status(404).json({ error: "Article introuvable." });
         return;
       }
       res.json(result);

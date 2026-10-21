@@ -1,11 +1,17 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 /**
- * Typo : Source Sans 3 (lisible en long). Cartes : fond blanc / gris, contours neutres (ring slate), pas de cadres colorés.
+ * Typo : Montserrat, la police du site Sorel actuel. Cartes : fond blanc / gris, contours neutres (ring slate), pas de cadres colorés.
  */
 @theme {
-  --font-sans: "Source Sans 3", ui-sans-serif, system-ui, sans-serif,
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  /* Écriture à la main : titre d'accueil uniquement. */
+  --font-hand: "Architects Daughter", "Comic Sans MS", cursive;
 }
 
 @layer base {
@@ -22,5 +28,90 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    @apply text-foreground;
+  }
+  * {
+    @apply border-border outline-ring/50;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+/* Jetons shadcn, réglés sur les couleurs du site (orange Sorel, cyan, slate). */
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-text: var(--brand-text);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+:root {
+  --brand: #27e4f5; /* cyan Sorel : fonds, traits, pastilles */
+  --brand-text: #0e7c86; /* cyan foncé : seul cyan autorisé pour du texte */
+  --background: #ffffff;
+  --foreground: #020617; /* slate-950 */
+  --card: #ffffff;
+  --card-foreground: #020617;
+  --popover: #ffffff;
+  --popover-foreground: #020617;
+  --primary: #ea580c; /* orange-600 */
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9; /* slate-100 */
+  --secondary-foreground: #0f172a;
+  --muted: #f8fafc; /* slate-50 */
+  --muted-foreground: #64748b; /* slate-500 */
+  --accent: #dffbfd; /* cyan Sorel très clair (survol des listes) */
+  --accent-foreground: #0f172a;
+  --destructive: #b91c1c; /* red-700 */
+  --border: #e2e8f0; /* slate-200 */
+  --input: #e2e8f0;
+  --ring: #27e4f5;
+  --radius: 0.75rem;
+}
+
+/* animations de l'accordéon (filtres du catalogue) */
+@theme {
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
   }
 }

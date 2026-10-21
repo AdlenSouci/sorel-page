@@ -10,6 +10,9 @@ const About = lazy(() =>
 const Catalog = lazy(() =>
   import("./pages/Catalog").then((m) => ({ default: m.Catalog })),
 );
+const ArticlePage = lazy(() =>
+  import("./pages/ArticlePage").then((m) => ({ default: m.ArticlePage })),
+);
 const CategoryDetail = lazy(() =>
   import("./pages/CategoryDetail").then((m) => ({ default: m.CategoryDetail })),
 );
@@ -56,6 +59,14 @@ export default function App() {
             element={
               <Suspense fallback={<RouteFallback />}>
                 <CategoryDetail />
+              </Suspense>
+            }
+          />
+          <Route
+            path="article/:reference"
+            element={
+              <Suspense fallback={<RouteFallback />}>
+                <ArticlePage />
               </Suspense>
             }
           />

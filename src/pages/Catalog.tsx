@@ -1,20 +1,24 @@
-import { ArrowRight, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Search } from "@/components/icons";
+import { useEffect, useMemo, useState } from "react";
+import { GammeCard } from "../components/GammeCard";
+import { PageTitle } from "../components/PageTitle";
+import { CardsSkeleton, ErrorMessage } from "../components/LoadState";
 import { useSeo } from "../hooks/useSeo";
-import { fetchCategories } from "../lib/catalog";
+import { fetchCategories } from "../lib/api";
+import { FILTRES_VIDES, GROUPES, filtrerGammes, groupeDe } from "../lib/gammes";
 import type { CategoryDTO } from "../types/catalog";
 
-const PLACEHOLDER = "/product-placeholder.svg";
-
+/** Page d'arrivée du catalogue : les gammes, rangées par rayon. Un clic ouvre ses articles. */
 export function Catalog() {
   const [categories, setCategories] = useState<CategoryDTO[] | null>(null);
   const [error, setError] = useState(false);
+  const [q, setQ] = useState("");
+  const [rayon, setRayon] = useState("");
 
   useSeo({
     title: "Catalogue — gammes et références",
     description:
-      "Parcourez les gammes Sorel Plastiques : moules ronds et rectangulaires, terrines, barquettes. Plus de 200 modèles standards, coloris au choix.",
+      "Parcourez les gammes Sorel Plastiques : moules ronds et rectangulaires, plats, boîtes, couvercles. Plus de 200 modèles standards, coloris au choix.",
   });
 
   useEffect(() => {
@@ -23,69 +27,110 @@ export function Catalog() {
       .catch(() => setError(true));
   }, []);
 
+  const total = useMemo(
+    () => (categories ?? []).reduce((sum, c) => sum + c.articleCount, 0),
+    [categories],
+  );
+  const visibles = useMemo(
+    () => filtrerGammes(categories ?? [], { ...FILTRES_VIDES, q, groupe: rayon }),
+    [categories, q, rayon],
+  );
+  const rayons = GROUPES.map((g) => ({
+    ...g,
+    gammes: visibles.filter((c) => groupeDe(c.slug).id === g.id),
+  })).filter((g) => g.gammes.length > 0);
+
   return (
-    <div className="px-6 py-14 md:px-16 md:py-20">
-      <header className="mx-auto mb-12 max-w-2xl text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#27E4F5]">
-          Catalogue
-        </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 md:text-4xl">
-          Nos catégories
-        </h1>
-        <p className="mt-3 text-slate-600">
-          Choisissez une catégorie pour voir ses articles.
-        </p>
-      </header>
+    <div className="relative px-6 py-14 md:px-16 md:py-20">
+      <div className="mb-10">
+        <PageTitle surtitre="Catalogue" titre="Nos gammes">
+          <p>
+            Choisissez une gamme pour voir ses articles.
+            {categories ? (
+              <span className="ml-1 font-semibold text-slate-950">
+                {categories.length} gammes, {total} références.
+              </span>
+            ) : null}
+          </p>
+        </PageTitle>
+      </div>
 
       <div className="mx-auto max-w-6xl">
         {error ? (
-          <p className="mb-8 rounded-2xl bg-red-50 px-5 py-4 text-center text-red-900">
-            Impossible de charger les catégories pour le moment.
-          </p>
+          <ErrorMessage className="mb-8">Impossible de charger les gammes pour le moment.</ErrorMessage>
         ) : null}
 
         {!categories && !error ? (
-          <div className="flex justify-center py-20 text-slate-500">
-            <Loader2 className="size-8 animate-spin" aria-hidden />
-            <span className="sr-only">Chargement des catégories…</span>
-          </div>
+          <CardsSkeleton count={6} className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" />
         ) : null}
 
-        {categories && categories.length > 0 ? (
-          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
-            {categories.map((cat) => (
-              <Link
-                key={cat.id}
-                to={`/catalogue/${encodeURIComponent(cat.slug)}`}
-                className="group block"
-              >
-                <div className="mb-3 overflow-hidden rounded-2xl bg-white shadow-md transition-all group-hover:scale-[1.03] group-hover:shadow-xl">
-                  <img
-                    src={PLACEHOLDER}
-                    alt={cat.nom}
-                    className="aspect-[4/3] w-full bg-slate-100 object-cover"
-                    loading="lazy"
-                  />
-                </div>
-                <p className="text-center font-semibold text-slate-950">
-                  {cat.nom}
-                </p>
-                <p className="mt-1 flex items-center justify-center gap-1 text-center text-sm text-slate-600">
-                  {cat.articleCount} article{cat.articleCount > 1 ? "s" : ""}
-                  <ArrowRight
-                    className="size-3.5 opacity-0 transition group-hover:opacity-100"
-                    aria-hidden
-                  />
-                </p>
-              </Link>
-            ))}
-          </div>
-        ) : null}
+        {categories ? (
+          <>
+            {/* filtre : une recherche et le choix du rayon, rien de plus */}
+            <div className="mb-10 flex flex-wrap items-center justify-center gap-3">
+              <label className="relative block w-full sm:w-72">
+                <span className="sr-only">Rechercher une gamme</span>
+                <Search
+                  className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-slate-500"
+                  aria-hidden
+                />
+                <input
+                  type="search"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Rechercher une gamme"
+                  className="h-10 w-full rounded-full border border-slate-300 bg-white pr-4 pl-10 text-sm outline-none transition placeholder:text-slate-500 focus:border-orange-400"
+                />
+              </label>
+              <div className="flex flex-wrap justify-center gap-2" role="group" aria-label="Rayon">
+                {[{ id: "", court: "Toutes" }, ...GROUPES].map((r) => {
+                  const on = rayon === r.id;
+                  return (
+                    <button
+                      key={r.id || "toutes"}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => setRayon(r.id)}
+                      className={`h-10 rounded-full border px-4 text-sm font-semibold transition-colors duration-200 ${
+                        on
+                          ? "border-slate-950 bg-slate-950 text-white"
+                          : "border-slate-300 bg-white text-slate-800 hover:border-orange-300"
+                      }`}
+                    >
+                      {r.court}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-        {categories && categories.length === 0 && !error ? (
-          <p className="py-20 text-center text-slate-600">
-            Aucune catégorie disponible pour le moment.
-          </p>
+            {rayons.length === 0 ? (
+              <p className="rounded-2xl border border-dashed border-slate-400 bg-white/80 py-14 text-center text-slate-800">
+                Aucune gamme ne correspond.
+              </p>
+            ) : null}
+
+            <div className="space-y-12">
+              {rayons.map((g) => (
+                <section key={g.id} aria-labelledby={`rayon-${g.id}`}>
+                  <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-slate-300 pb-3">
+                    <h2
+                      id={`rayon-${g.id}`}
+                      className="text-xl font-semibold tracking-tight text-slate-950"
+                    >
+                      {g.titre}
+                    </h2>
+                    <p className="text-sm font-semibold text-slate-900 md:text-base">{g.intro}</p>
+                  </div>
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {g.gammes.map((c, i) => (
+                      <GammeCard key={c.slug} category={c} index={i} />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </>
         ) : null}
       </div>
     </div>

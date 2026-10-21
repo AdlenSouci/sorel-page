@@ -1,10 +1,12 @@
+import type { CategoryDTO } from "../types/catalog";
 import type {
+  ArticleDetailDTO,
   CatalogueItemDTO,
   CategoryCatalogDTO,
-  CategoryDTO,
 } from "../types/category";
 
-async function parseJson<T>(res: Response): Promise<T> {
+async function fetchJson<T>(path: string): Promise<T> {
+  const res = await fetch(path);
   const text = await res.text();
   if (text.trimStart().startsWith("<")) {
     throw new Error("Impossible de charger les données.");
@@ -32,24 +34,25 @@ export function resolvePhotoUrl(photo: string | null): string | null {
   return p.startsWith("/") ? p : `/${p}`;
 }
 
-export async function fetchCategories(): Promise<CategoryDTO[]> {
-  const res = await fetch("/api/categories");
-  return parseJson<CategoryDTO[]>(res);
+export function fetchCategories(opts?: {
+  limit?: number;
+  featured?: boolean;
+}): Promise<CategoryDTO[]> {
+  const sp = new URLSearchParams();
+  if (opts?.limit) sp.set("limit", String(opts.limit));
+  if (opts?.featured) sp.set("featured", "1");
+  const qs = sp.toString();
+  return fetchJson<CategoryDTO[]>(`/api/categories${qs ? `?${qs}` : ""}`);
 }
 
-export async function fetchCategoryCatalog(
-  slug: string,
-): Promise<CategoryCatalogDTO> {
+export function fetchCategoryCatalog(slug: string): Promise<CategoryCatalogDTO> {
   const sp = new URLSearchParams({ view: "items", slug });
-  const res = await fetch(`/api/categories?${sp}`);
-  return parseJson<CategoryCatalogDTO>(res);
+  return fetchJson<CategoryCatalogDTO>(`/api/categories?${sp}`);
 }
 
-export async function fetchFeaturedProducts(
-  limit = 4,
-): Promise<CatalogueItemDTO[]> {
-  const res = await fetch(`/api/featured?limit=${limit}`);
-  return parseJson<CatalogueItemDTO[]>(res);
+export function fetchArticle(reference: string): Promise<ArticleDetailDTO> {
+  const sp = new URLSearchParams({ view: "article", reference });
+  return fetchJson<ArticleDetailDTO>(`/api/categories?${sp}`);
 }
 
 export function itemTitle(item: CatalogueItemDTO): string {

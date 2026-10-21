@@ -6,11 +6,20 @@ import type {
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, Check, Mail, Sparkles } from "lucide-react";
+import { ArrowUpRight, Check, Mail } from "@/components/icons";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useSeo } from "../hooks/useSeo";
 import { mailtoQuery, useWishlist } from "../lib/wishlist";
 
 const CONTACT_MAIL = "contact@sorel-plastiques.local";
+
+// Composants shadcn animés : on garde les effets de focus et de survol de la v1.
+const MotionInput = motion.create(Input);
+const MotionTextarea = motion.create(Textarea);
+const MotionButton = motion.create(Button);
 
 const springSlow = {
   type: "spring" as const,
@@ -105,12 +114,9 @@ function Field({
 }) {
   const inner = (
     <>
-      <label
-        htmlFor={id}
-        className="block text-[0.78rem] font-medium tracking-wide text-slate-800"
-      >
+      <Label htmlFor={id} className="text-[0.78rem] font-medium tracking-wide text-slate-800">
         {label}
-      </label>
+      </Label>
       {children(id)}
     </>
   );
@@ -222,34 +228,29 @@ export function Contact() {
             animate={{ opacity: 1, y: 0 }}
             transition={springSlow}
           >
-            <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#27E4F5]/20 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#27E4F5]">
-              <Sparkles className="size-3.5 text-orange-600" aria-hidden />
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/75 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-800 ring-1 ring-cyan-800/20">
               Contact
             </p>
             <h1 className="text-[clamp(2.1rem,5vw,3.25rem)] font-bold leading-[1.08] tracking-tight text-slate-950">
               Écrivez-nous.
               <br />
-              <span className="text-[#27E4F5]">Nous répondons vite.</span>
+              <span className="text-cyan-800">Nous répondons vite.</span>
             </h1>
             <p className="mt-6 max-w-md text-[1.05rem] leading-relaxed text-slate-900">
               Devis, catalogue personnalisé ou question technique — un message
               suffit. Design sobre, focus sur l’essentiel.
             </p>
             <div className="mt-10 flex flex-wrap gap-3">
-              <a
-                href={`mailto:${CONTACT_MAIL}`}
-                className="group inline-flex items-center gap-2 rounded-full border-2 border-[#27E4F5]/40 bg-gradient-to-r from-[#27E4F5]/10 to-orange-500/10 px-5 py-2.5 text-sm font-semibold text-slate-900 backdrop-blur-md transition hover:border-[#27E4F5] hover:from-[#27E4F5]/20 hover:to-orange-500/20"
-              >
-                <Mail className="size-4 text-[#27E4F5]" aria-hidden />
-                {CONTACT_MAIL}
-                <ArrowUpRight className="size-4 text-orange-600 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </a>
-              <Link
-                to="/catalogue"
-                className="inline-flex items-center rounded-full px-5 py-2.5 text-sm font-medium text-[#27E4F5] underline underline-offset-4 transition hover:text-[#1fb3c4]"
-              >
-                Voir le catalogue
-              </Link>
+              <Button asChild variant="outline" size="pill" className="group py-2.5 text-sm">
+                <a href={`mailto:${CONTACT_MAIL}`}>
+                  <Mail className="size-4" aria-hidden />
+                  {CONTACT_MAIL}
+                  <ArrowUpRight className="size-4 text-orange-600 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </a>
+              </Button>
+              <Button asChild variant="cyan" className="h-auto px-3 py-2.5">
+                <Link to="/catalogue">Voir le catalogue</Link>
+              </Button>
             </div>
 
             {wishlist.length > 0 ? (
@@ -258,13 +259,12 @@ export function Contact() {
                   Vous avez {wishlist.length} référence
                   {wishlist.length > 1 ? "s" : ""} dans votre liste.
                 </p>
-                <Link
-                  to="/mes-references"
-                  className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#27E4F5] underline-offset-4 hover:underline"
-                >
-                  Envoyer directement la demande de devis
-                  <ArrowUpRight className="size-4" aria-hidden />
-                </Link>
+                <Button asChild variant="cyan" className="mt-2 h-auto px-0 text-sm">
+                  <Link to="/mes-references">
+                    Envoyer directement la demande de devis
+                    <ArrowUpRight className="size-4" aria-hidden />
+                  </Link>
+                </Button>
               </div>
             ) : null}
           </motion.header>
@@ -296,13 +296,13 @@ export function Contact() {
                         </span>
                         .
                       </p>
-                      <button
-                        type="button"
+                      <Button
+                        variant="outline"
                         onClick={() => setSent(false)}
-                        className="mt-8 rounded-full border border-stone-900/12 bg-white/40 px-6 py-2.5 text-sm font-medium text-stone-900 backdrop-blur-md transition hover:bg-white/70"
+                        className="mt-8 h-auto px-6 py-2.5 text-sm"
                       >
                         Nouveau message
-                      </button>
+                      </Button>
                     </motion.div>
                   ) : (
                     <motion.form
@@ -322,7 +322,7 @@ export function Contact() {
                           reduced={reduced}
                         >
                           {(id) => (
-                            <motion.input
+                            <MotionInput
                               id={id}
                               required
                               autoComplete="name"
@@ -332,7 +332,7 @@ export function Contact() {
                                 reduced ? undefined : { scale: 1.008 }
                               }
                               transition={{ type: "spring", stiffness: 500 }}
-                              className="w-full rounded-2xl border-2 border-[#27E4F5]/50 bg-white px-4 py-3.5 text-[0.95rem] text-slate-900 outline-none placeholder:text-slate-600 focus:border-[#27E4F5] focus:bg-white focus:ring-2 focus:ring-[#27E4F5]/30"
+                              className="w-full h-auto rounded-2xl border-2 border-[#27E4F5]/50 bg-white px-4 py-3.5 text-[0.95rem] text-slate-900 outline-none placeholder:text-slate-600 focus:border-[#27E4F5] focus:bg-white focus:ring-2 focus:ring-[#27E4F5]/30"
                               placeholder="Jean Dupont"
                             />
                           )}
@@ -344,7 +344,7 @@ export function Contact() {
                           reduced={reduced}
                         >
                           {(id) => (
-                            <motion.input
+                            <MotionInput
                               id={id}
                               type="email"
                               required
@@ -354,7 +354,7 @@ export function Contact() {
                               whileFocus={
                                 reduced ? undefined : { scale: 1.008 }
                               }
-                              className="w-full rounded-2xl border-2 border-[#27E4F5]/50 bg-white px-4 py-3.5 text-[0.95rem] text-slate-900 outline-none placeholder:text-slate-600 focus:border-[#27E4F5] focus:bg-white focus:ring-2 focus:ring-[#27E4F5]/30"
+                              className="w-full h-auto rounded-2xl border-2 border-[#27E4F5]/50 bg-white px-4 py-3.5 text-[0.95rem] text-slate-900 outline-none placeholder:text-slate-600 focus:border-[#27E4F5] focus:bg-white focus:ring-2 focus:ring-[#27E4F5]/30"
                               placeholder="vous@entreprise.com"
                             />
                           )}
@@ -368,7 +368,7 @@ export function Contact() {
                         reduced={reduced}
                       >
                         {(id) => (
-                          <motion.input
+                          <MotionInput
                             id={id}
                             autoComplete="organization"
                             value={company}
@@ -376,7 +376,7 @@ export function Contact() {
                             whileFocus={
                               reduced ? undefined : { scale: 1.004 }
                             }
-                            className="w-full rounded-2xl border-2 border-[#27E4F5]/50 bg-white px-4 py-3.5 text-[0.95rem] text-slate-900 outline-none placeholder:text-slate-600 focus:border-[#27E4F5] focus:bg-white focus:ring-2 focus:ring-[#27E4F5]/30"
+                            className="w-full h-auto rounded-2xl border-2 border-[#27E4F5]/50 bg-white px-4 py-3.5 text-[0.95rem] text-slate-900 outline-none placeholder:text-slate-600 focus:border-[#27E4F5] focus:bg-white focus:ring-2 focus:ring-[#27E4F5]/30"
                             placeholder="Sorel ou autre"
                           />
                         )}
@@ -389,7 +389,7 @@ export function Contact() {
                         reduced={reduced}
                       >
                         {(id) => (
-                          <motion.input
+                          <MotionInput
                             id={id}
                             required
                             value={subject}
@@ -397,7 +397,7 @@ export function Contact() {
                             whileFocus={
                               reduced ? undefined : { scale: 1.004 }
                             }
-                            className="w-full rounded-2xl border-2 border-[#27E4F5]/50 bg-white px-4 py-3.5 text-[0.95rem] text-slate-900 outline-none placeholder:text-slate-600 focus:border-[#27E4F5] focus:bg-white focus:ring-2 focus:ring-[#27E4F5]/30"
+                            className="w-full h-auto rounded-2xl border-2 border-[#27E4F5]/50 bg-white px-4 py-3.5 text-[0.95rem] text-slate-900 outline-none placeholder:text-slate-600 focus:border-[#27E4F5] focus:bg-white focus:ring-2 focus:ring-[#27E4F5]/30"
                             placeholder="Devis catalogue, disponibilité…"
                           />
                         )}
@@ -410,7 +410,7 @@ export function Contact() {
                         reduced={reduced}
                       >
                         {(id) => (
-                          <motion.textarea
+                          <MotionTextarea
                             id={id}
                             required
                             rows={6}
@@ -419,7 +419,7 @@ export function Contact() {
                             whileFocus={
                               reduced ? undefined : { scale: 1.003 }
                             }
-                            className="w-full resize-y rounded-2xl border-2 border-[#27E4F5]/50 bg-white px-4 py-3.5 text-[0.95rem] leading-relaxed text-slate-900 outline-none placeholder:text-slate-600 focus:border-[#27E4F5] focus:bg-white focus:ring-2 focus:ring-[#27E4F5]/30"
+                            className="w-full resize-y h-auto rounded-2xl border-2 border-[#27E4F5]/50 bg-white px-4 py-3.5 text-[0.95rem] leading-relaxed text-slate-900 outline-none placeholder:text-slate-600 focus:border-[#27E4F5] focus:bg-white focus:ring-2 focus:ring-[#27E4F5]/30"
                             placeholder="Décrivez votre besoin, volumes, références produits…"
                           />
                         )}
@@ -431,16 +431,18 @@ export function Contact() {
                           message — aucune donnée n’est stockée sur nos serveurs
                           pour l’instant.
                         </p>
-                        <motion.button
+                        <MotionButton
                           type="submit"
+                          variant="brand"
+                          size="pill"
                           whileHover={
                             reduced ? undefined : { scale: 1.03, y: -1 }
                           }
                           whileTap={reduced ? undefined : { scale: 0.98 }}
-                          className="rounded-full bg-gradient-to-r from-orange-500 to-amber-500 px-8 py-3.5 text-[0.9rem] font-semibold tracking-wide text-white shadow-lg transition hover:from-orange-600 hover:to-amber-600"
+                          className="px-8 py-3.5 text-[0.9rem] tracking-wide"
                         >
                           Envoyer
-                        </motion.button>
+                        </MotionButton>
                       </div>
                     </motion.form>
                   )}

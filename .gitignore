@@ -31,3 +31,6 @@ certs/
 dev.db*
 
 .vercel
+
+# index des photos (généré par scripts/index-photos.mjs)
+public/img/photos.json

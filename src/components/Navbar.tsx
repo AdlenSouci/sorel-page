@@ -1,5 +1,5 @@
-import type { LucideIcon } from "lucide-react";
-import { Home, Mail, Info, Palette, Package, ClipboardList } from "lucide-react";
+import type { IconComponent } from "@/components/icons";
+import { Home, Mail, Info, Package, ClipboardList } from "@/components/icons";
 import { LayoutGroup, motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 import { Link, NavLink, useLocation, type Location } from "react-router-dom";
@@ -13,9 +13,6 @@ const bubble = {
   mass: 0.5,
 };
 
-function isGamme(loc: Location) {
-  return loc.pathname === "/" && loc.hash === "#produits";
-}
 
 function isHomeRoot(loc: Location) {
   return loc.pathname === "/" && loc.hash !== "#produits";
@@ -63,7 +60,7 @@ function NavIcon({
   Icon,
   muted,
 }: {
-  Icon: LucideIcon;
+  Icon: IconComponent;
   muted: boolean | null;
 }) {
   return (
@@ -83,14 +80,10 @@ const CHIP_COLORS = {
   catalogue: "#FF8C42", // Orange pour catalogue
   liste: "#10B981",     // Vert pour ma liste
   about: "#7C3AED",     // Violet pour à propos
-  gammes: "#FFB347",    // Jaune pour gammes
   contact: "#EC4899",   // Rose pour contact
 } as const;
 
 function getChipColor(location: Location): string {
-  if (location.pathname === "/" && location.hash === "#produits") {
-    return CHIP_COLORS.gammes;
-  }
   if (location.pathname === "/") {
     return CHIP_COLORS.home;
   }
@@ -216,13 +209,6 @@ export function Navbar() {
                   <NavIcon Icon={Info} muted={muted} />
                   <span className="nav-l whitespace-nowrap">À propos</span>
                 </NavLink>
-              </NavItemSlot>
-
-              <NavItemSlot active={isGamme(loc)} chipColor={chipColor}>
-                <Link to="/#produits" className={linkCn(isGamme(loc))}>
-                  <NavIcon Icon={Palette} muted={muted} />
-                  <span className="nav-l whitespace-nowrap">Gammes</span>
-                </Link>
               </NavItemSlot>
 
               <NavItemSlot active={loc.pathname.startsWith("/contact")} chipColor={chipColor}>
